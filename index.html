@@ -38,6 +38,7 @@
 <!-- CREDIT_BELOW_CENTER_NO_SHAPE_V19 -->
 <!-- CREDIT_FURTHER_BELOW_CENTER_V20 -->
 <!-- STABLE_STRIKER_RESET_V21 -->
+<!-- MOBILE_AUDIO_DEFAULT_LOUDER_V22 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
@@ -96,7 +97,7 @@ const T={
     tagline:'Finsk brädbiljard — lokal webbläsarversion för 2–4 spelare', turn:'Tur', help:'Placera köbrickan på din slaglinje, dra bakåt och släpp.', wait:'Vänta tills alla brickor har stannat.', over:'Spelet är slut. Starta ett nytt spel.', newGame:'Nytt spel', undo:'Ångra slag', apply:'Använd', aim:'Sikthjälp', sound:'Ljud', off:'av', on:'på', controls:'Kontroller: dra den stora köbrickan (“plutsi/limppu”). Pilen visar riktning och kraft. Tryck R för att avbryta ett laddat slag före skottet.', rules:'Implementerade regler', log:'Slaglogg', players:['Röd','Blå','Grön','Gul'], rowSetup:'Finsk raduppställning', centerSetup:'Centercirkel / Couronne', newLog:'Nytt spel', own:'egna', opponents:'motståndares', nothing:'inget i hål', strikerFoul:'köbrickan i hål', returned:'en egen bricka återställdes', wins:'vinner!', draw:'Oavgjort', shot:'slag', potted:'i hål', foulMix:'egna och motståndares brickor i hål', multiplayerNote:'I 3–4-spelarläget har varje färg 8 brickor och slår från sidan mittemot sin startrad.', human:'Människa', computer:'Dator', easyAI:'Lätt AI', hardAI:'Svår AI', impossibleAI:'Omöjlig AI', inactive:'Inaktiv', botPlayers:'Datorspelare', botThinking:'Datorn siktar…', botShot:'Datorslag', credit:'Spel av Trassel Vardias'
   }
 };
-let lang='en', variant='rows', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=false;
+let lang='en', variant='rows', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=true;
 let aiMode={red:'human',blue:'easy',green:'human',yellow:'human'}, botPending=false;
 let centerSymbol='joulutorttu', trasselTapCount=0, trasselTapTimer=null, spiralSpin=false, spiralAngle=0;
 let lastSnapshot=null, shotEvents=null, lastFrameTime=null, physicsAccumulator=0;
@@ -115,7 +116,41 @@ function restoreState(s){
  syncControls(); updateText(); updateUI();
 }
 function log(msg){const p=document.createElement('p'); p.textContent=msg; logEl.prepend(p);}
-function beep(freq=360,dur=.04){ if(!sound) return; try{const ac=new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(), g=ac.createGain(); o.frequency.value=freq; g.gain.value=.04; o.connect(g); g.connect(ac.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime+dur); o.stop(ac.currentTime+dur);}catch(e){} }
+let audioCtx=null, audioUnlocked=false;
+function getAudioCtx(){
+ if(!audioCtx){
+   const AC=window.AudioContext||window.webkitAudioContext;
+   if(!AC) return null;
+   audioCtx=new AC();
+ }
+ return audioCtx;
+}
+function unlockAudio(){
+ if(!sound) return;
+ const ac=getAudioCtx();
+ if(!ac) return;
+ try{
+   if(ac.state==='suspended') ac.resume();
+   audioUnlocked=true;
+ }catch(e){}
+}
+function beep(freq=360,dur=.055,vol=.12){
+ if(!sound) return;
+ try{
+   const ac=getAudioCtx();
+   if(!ac) return;
+   if(ac.state==='suspended') ac.resume();
+   const o=ac.createOscillator(), g=ac.createGain();
+   o.type='sine';
+   o.frequency.setValueAtTime(freq,ac.currentTime);
+   g.gain.setValueAtTime(Math.max(.001,vol),ac.currentTime);
+   g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime+dur);
+   o.connect(g);
+   g.connect(ac.destination);
+   o.start(ac.currentTime);
+   o.stop(ac.currentTime+dur+.01);
+ }catch(e){}
+}
 function sidePositions(side){ const gap=discR*2+5; const start=W/2-gap*3.5; const fixed={top:minY+discR+5,bottom:maxY-discR-5,left:minX+discR+5,right:maxX-discR-5}[side]; return Array.from({length:8},(_,i)=> side==='top'||side==='bottom' ? {x:start+i*gap,y:fixed} : {x:fixed,y:start+i*gap}); }
 
 function centerPatternPositions(count){
@@ -589,7 +624,7 @@ function loop(now){
 }
 function pos(e){ const rect=canvas.getBoundingClientRect(), t=e.touches?e.touches[0]:e; return {x:(t.clientX-rect.left)*W/rect.width,y:(t.clientY-rect.top)*H/rect.height};}
 function linePlacement(p){ const l=shootingLine(current); if(l.axis==='y') return {ok:Math.abs(p.y-l.value)<55,x:p.x,y:l.value,key:p.x}; return {ok:Math.abs(p.x-l.value)<55,x:l.value,y:p.y,key:p.y};}
-canvas.addEventListener('pointerdown',e=>{ if(moving||won||isComputerTurn())return; const p=pos(e); if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok && isSafeStrikerPos(lp.x,lp.y)){ striker.x=lp.x; striker.y=lp.y; } } });
+canvas.addEventListener('pointerdown',e=>{ unlockAudio(); if(moving||won||isComputerTurn())return; const p=pos(e); if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok && isSafeStrikerPos(lp.x,lp.y)){ striker.x=lp.x; striker.y=lp.y; } } });
 canvas.addEventListener('pointermove',e=>{ if(dragging) dragNow=pos(e); });
 canvas.addEventListener('pointerup',e=>{ if(!dragging||moving||won||isComputerTurn())return; const p=pos(e); dragging=false; const vx=(dragFrom.x-p.x), vy=(dragFrom.y-p.y), power=Math.min(165,Math.hypot(vx,vy)); if(power<8) return; lastSnapshot=cloneState(); shotEvents={potted:[],strikerPocket:false}; striker.vx=vx*.125; striker.vy=vy*.125; physicsAccumulator=0; lastFrameTime=null; moving=true; });
 window.addEventListener('keydown',e=>{
@@ -608,7 +643,7 @@ document.getElementById('language').onchange=e=>{lang=e.target.value; syncContro
 document.getElementById('players').onchange=e=>{playerCount=Number(e.target.value); players=playerOrders[playerCount]; botPending=false; updateText();};
 document.getElementById('variant').onchange=e=>{variant=e.target.value;};
 document.getElementById('botBtn').onclick=()=>{aimHelper=!aimHelper; updateText();};
-document.getElementById('soundBtn').onclick=()=>{sound=!sound; updateText();};
+document.getElementById('soundBtn').onclick=()=>{sound=!sound; if(sound) unlockAudio(); updateText();};
 
 const creditEl=document.getElementById('credit');
 if(creditEl){
@@ -628,6 +663,10 @@ if(creditEl){
    }
  });
 }
+
+['pointerdown','touchstart','mousedown','keydown'].forEach(ev=>{
+ window.addEventListener(ev, unlockAudio, {passive:true});
+});
 
 syncControls(); resetGame(); requestAnimationFrame(loop);
 })();
