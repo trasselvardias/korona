@@ -37,6 +37,7 @@
 <!-- R_CANCELS_STRIKE_NOT_LOCATION_V18 -->
 <!-- CREDIT_BELOW_CENTER_NO_SHAPE_V19 -->
 <!-- CREDIT_FURTHER_BELOW_CENTER_V20 -->
+<!-- STABLE_STRIKER_RESET_V21 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
@@ -142,13 +143,27 @@ function shootPoint(player){ const s=playerDefs[player].shoot; const pad=92; ret
 function shootingLine(player){ const s=playerDefs[player].shoot, pad=92; if(s==='top'||s==='bottom') return {axis:'y', value:s==='top'?minY+pad:maxY-pad, from:minX+90, to:maxX-90}; return {axis:'x', value:s==='left'?minX+pad:maxX-pad, from:minY+90, to:maxY-90}; }
 function placeFreeNear(x,y,r=discR){ const all=()=>bodies.concat(striker?[striker]:[]); for(let ring=0; ring<20; ring++){ const n=Math.max(8,ring*8); for(let a=0; a<n; a++){ let ang=a/n*Math.PI*2, nx=x+Math.cos(ang)*ring*(r*1.15), ny=y+Math.sin(ang)*ring*(r*1.15); if(nx<minX+r||nx>maxX-r||ny<minY+r||ny>maxY-r) continue; if(!all().some(b=>!b.pocketed && dist(nx,ny,b.x,b.y)<r+b.r+2)) return {x:nx,y:ny}; }} return {x:W/2,y:H/2};}
 function body(id,color,x,y,r=discR){return {id,color,x,y,vx:0,vy:0,r,m:r*r,pocketed:false,startX:x,startY:y};}
-function resetGame(){ lastFrameTime=null; physicsAccumulator=0; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
+function resetGame(){ lastFrameTime=null; physicsAccumulator=0; dragging=false; dragFrom=null; dragNow=null; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
 else { const pts=centerPatternPositions(players.length); pts.forEach((p,i)=>bodies.push(body(id++,players[i%players.length],p.x,p.y))); }
  resetStriker(null,true); lastSnapshot=null; log(`${tr().newLog}: ${variant==='rows'?tr().rowSetup:tr().centerSetup}, ${playerCount} players.`); updateText(); updateUI();}
 function active(){return bodies.filter(b=>!b.pocketed).concat(striker && !striker.pocketed ? [striker] : []);} function dist(a,b,c,d){return Math.hypot(a-c,b-d);} function speed(b){return Math.hypot(b.vx,b.vy);}
 function isSafeStrikerPos(x,y){ if(y<minY+strikerR||y>maxY-strikerR||x<minX+strikerR||x>maxX-strikerR) return false; if(pockets.some(p=>dist(x,y,p.x,p.y)<pocketR+strikerR*.8)) return false; return !bodies.some(b=>!b.pocketed && dist(x,y,b.x,b.y)<b.r+strikerR+2); }
-function resetStriker(preferred,quiet=false){ const sp=shootPoint(current); let x=sp.x,y=sp.y; const line=shootingLine(current); if(preferred!=null){ if(line.axis==='y') x=Math.max(minX+strikerR+45,Math.min(maxX-strikerR-45,preferred)); else y=Math.max(minY+strikerR+45,Math.min(maxY-strikerR-45,preferred)); }
- let pos=placeFreeNear(x,y,strikerR); striker=body('s','striker',pos.x,pos.y,strikerR); striker.isStriker=true; if(!quiet) updateUI();}
+function resetStriker(preferred,quiet=false){
+ const sp=shootPoint(current);
+ let x=sp.x,y=sp.y;
+ const line=shootingLine(current);
+ if(preferred!=null){
+   if(line.axis==='y') x=Math.max(minX+strikerR+45,Math.min(maxX-strikerR-45,preferred));
+   else y=Math.max(minY+strikerR+45,Math.min(maxY-strikerR-45,preferred));
+ }
+ // We are replacing the striker, so do not let placeFreeNear avoid the old striker.
+ // This prevents New Game / Apply from alternating between two nearby start positions.
+ striker=null;
+ let pos=placeFreeNear(x,y,strikerR);
+ striker=body('s','striker',pos.x,pos.y,strikerR);
+ striker.isStriker=true;
+ if(!quiet) updateUI();
+}
 function nextPlayer(){ const i=players.indexOf(current); current=players[(i+1)%players.length]; }
 function updatePhysics(){ let arr=active(); for(const b of arr){ b.x+=b.vx; b.y+=b.vy; b.vx*=FRICTION; b.vy*=FRICTION; if(Math.abs(b.vx)<STOP_EPS) b.vx=0; if(Math.abs(b.vy)<STOP_EPS) b.vy=0; if(b.x-b.r<minX){b.x=minX+b.r;b.vx=Math.abs(b.vx)*.82;beep(160)} if(b.x+b.r>maxX){b.x=maxX-b.r;b.vx=-Math.abs(b.vx)*.82;beep(160)} if(b.y-b.r<minY){b.y=minY+b.r;b.vy=Math.abs(b.vy)*.82;beep(160)} if(b.y+b.r>maxY){b.y=maxY-b.r;b.vy=-Math.abs(b.vy)*.82;beep(160)} }
  for(let k=0;k<2;k++) for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) collide(arr[i],arr[j]);
