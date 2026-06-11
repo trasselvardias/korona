@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Korona — FIXED lines + joulutorttu + Trassel Vardias</title>
+<title>Korona by Trassel Vardias</title>
 <style>
   :root{--bg:#1f201c;--panel:#2c2a24;--ink:#f6edda;--muted:#c9bfa9;--wood:#b67b42;--darkwood:#6f4326;--line:#efe4c6;--red:#cf4f61;--blue:#5185d9;--green:#55a868;--yellow:#d8b34c;}
   *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#38352c,#171713 70%);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
@@ -39,6 +39,14 @@
 <!-- CREDIT_FURTHER_BELOW_CENTER_V20 -->
 <!-- STABLE_STRIKER_RESET_V21 -->
 <!-- MOBILE_AUDIO_DEFAULT_LOUDER_V22 -->
+<!-- CENTER_6_TAP_RAINBOW_BOARD_V23 -->
+<!-- MUTED_RAINBOW_LARGER_CREDIT_V24 -->
+<!-- SOLID_CENTER_SCHEMES_BRIGHTER_RAINBOW_V25 -->
+<!-- CLASSIC_WOOD_LIGHT_FINNISH_BORDER_V26 -->
+<!-- FULL_BOARD_SCHEMES_NO_FINNISH_CENTER_FILL_V27 -->
+<!-- EVERY_LAYER_THEMED_V28 -->
+<!-- RAINBOW_FIXED_CENTER_OUTLINE_HUMANLIKE_AI_V29 -->
+<!-- INTERMEDIATE_AI_V30 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
@@ -58,6 +66,7 @@
     </div>
     <div class="row">
       <select id="language"><option value="en">English</option><option value="fi">Suomi</option><option value="sv">Svenska</option></select>
+      <select id="scheme"><option value="wood">Classic wood</option><option value="finnish">Finnish blue & white</option><option value="walnut">Dark walnut</option></select>
     </div>
     <div class="botGrid" id="botControls"></div>
     <div class="row"><button id="botBtn"></button><button id="soundBtn"></button></div>
@@ -79,6 +88,50 @@ const discR=22, strikerR=28;
 const PHYSICS_DT_MS=1000/60, MAX_PHYSICS_STEPS=6;
 const FRICTION=0.976, STOP_EPS=0.055, MOVING_EPS=0.09;
 const colors={red:'#cf4f61',blue:'#5185d9',green:'#55a868',yellow:'#d8b34c',striker:'#efe3c6'};
+const boardSchemes={
+ wood:{
+   // Classic wood keeps the original Korona board colors.
+   canvas:'#15130e',
+   frame0:'#d5a466',frame1:'#b87d40',frame2:'#8c572d',
+   frameOuter:'#3f2411',frameInner:'#9a5c2b',
+   railOuter:'#3f2411',rail:'#68401f',railInner:'#8d572a',
+   board:'#c99355',
+   guide:'rgba(255,248,220,.72)',guideStrong:'rgba(255,248,220,.9)',aimGuide:'rgba(255,255,255,.40)',
+   centerFill:'rgba(201,147,85,.38)',centerStroke:'rgba(96,55,27,.42)',
+   symbol:'rgb(72,42,23)',symbolCutout:'#c99355',
+   pocket:'#2a170e',pocketRing:'#e3bc80',credit:'rgba(86,49,25,.84)',
+   discStroke:'rgba(70,38,18,.85)',discHighlight:'rgba(255,255,255,.22)',discShade:'rgba(0,0,0,.2)',
+   drag:'rgba(30,20,10,.65)'
+ },
+ finnish:{
+   // Blue-white theme: every board layer is blue/white, no brown wood remains.
+   canvas:'#fafdff',
+   frame0:'#ffffff',frame1:'#edf8ff',frame2:'#caebff',
+   frameOuter:'#55afe4',frameInner:'#ffffff',
+   railOuter:'#ffffff',rail:'#55afe4',railInner:'#92d7ff',
+   board:'#fbfdff',
+   guide:'rgba(85,175,228,.52)',guideStrong:'rgba(85,175,228,.74)',aimGuide:'rgba(0,88,158,.38)',
+   centerFill:null,centerStroke:'rgba(85,175,228,.58)',
+   symbol:'#55afe4',symbolCutout:'#fbfdff',
+   pocket:'#0d6597',pocketRing:'#a8e4ff',credit:'rgba(38,130,186,.90)',
+   discStroke:'rgba(20,88,135,.72)',discHighlight:'rgba(255,255,255,.34)',discShade:'rgba(0,73,130,.18)',
+   drag:'rgba(0,88,158,.62)'
+ },
+ walnut:{
+   canvas:'#120905',
+   frame0:'#8d5b34',frame1:'#5d351f',frame2:'#2d1810',
+   frameOuter:'#120905',frameInner:'#6c3b20',
+   railOuter:'#120905',rail:'#21110a',railInner:'#4a2616',
+   board:'#704221',
+   guide:'rgba(245,211,159,.62)',guideStrong:'rgba(245,211,159,.82)',aimGuide:'rgba(245,211,159,.42)',
+   centerFill:'rgba(112,66,33,.46)',centerStroke:'rgba(235,188,118,.28)',
+   symbol:'#f1c27c',symbolCutout:'#704221',
+   pocket:'#120905',pocketRing:'#c99052',credit:'rgba(245,211,159,.82)',
+   discStroke:'rgba(24,12,7,.82)',discHighlight:'rgba(255,235,200,.20)',discShade:'rgba(0,0,0,.26)',
+   drag:'rgba(245,211,159,.55)'
+ }
+};
+function scheme(){return boardSchemes[boardScheme]||boardSchemes.wood;}
 const playerDefs={
   red:{side:'top',shoot:'bottom'},
   blue:{side:'bottom',shoot:'top'},
@@ -88,28 +141,29 @@ const playerDefs={
 const playerOrders={2:['red','blue'],3:['red','blue','green'],4:['red','blue','green','yellow']};
 const T={
   en:{
-    tagline:'Finnish board billiards — local 2–4 player browser version', turn:'Turn', help:'Place the striker on your shooting line, pull back, release.', wait:'Wait for all discs to stop.', over:'Game over. Start a new game to play again.', newGame:'New game', undo:'Undo shot', apply:'Apply', aim:'Aim helper', sound:'Sound', off:'off', on:'on', controls:'Controls: drag the large striker (“plutsi/limppu”). The arrow shows shot direction and power. Use R to cancel a loaded shot before shooting.', rules:'Implemented rules', log:'Shot log', players:['Red','Blue','Green','Yellow'], rowSetup:'Finnish row setup', centerSetup:'Center-circle Couronne setup', newLog:'New game', own:'own', opponents:'opponent', nothing:'nothing potted', strikerFoul:'striker foul', returned:'one own disc returned', wins:'wins!', draw:'Draw', shot:'shot', potted:'potted', foulMix:'potted own and opponent discs', multiplayerNote:'For 3–4 players, each color has 8 discs and shoots from the side opposite its starting row.', human:'Human', computer:'Computer', easyAI:'Easy AI', hardAI:'Hard AI', impossibleAI:'Impossible AI', inactive:'Inactive', botPlayers:'Computer players', botThinking:'Computer is aiming…', botShot:'Computer shot', credit:'Game by Trassel Vardias'
+    tagline:'Finnish board billiards — local 2–4 player browser version', turn:'Turn', help:'Place the striker on your shooting line, pull back, release.', wait:'Wait for all discs to stop.', over:'Game over. Start a new game to play again.', newGame:'New game', undo:'Undo shot', apply:'Apply', aim:'Aim helper', sound:'Sound', off:'off', on:'on', controls:'Controls: drag the large striker (“plutsi/limppu”). The arrow shows shot direction and power. Use R to cancel a loaded shot before shooting.', rules:'Implemented rules', log:'Shot log', players:['Red','Blue','Green','Yellow'], rowSetup:'Finnish row setup', centerSetup:'Center-circle Couronne setup', newLog:'New game', own:'own', opponents:'opponent', nothing:'nothing potted', strikerFoul:'striker foul', returned:'one own disc returned', wins:'wins!', draw:'Draw', shot:'shot', potted:'potted', foulMix:'potted own and opponent discs', multiplayerNote:'For 3–4 players, each color has 8 discs and shoots from the side opposite its starting row.', human:'Human', computer:'Computer', easyAI:'Easy AI', intermediateAI:'Intermediate AI', hardAI:'Hard AI', impossibleAI:'Impossible AI', inactive:'Inactive', botPlayers:'Computer players', botThinking:'Computer is aiming…', botShot:'Computer shot', credit:'Game by Trassel Vardias', woodScheme:'Classic wood', finnishScheme:'Finnish blue & white', walnutScheme:'Dark walnut'
   },
   fi:{
-    tagline:'Suomalainen lautabiljardi — paikallinen 2–4 pelaajan selainversio', turn:'Vuoro', help:'Aseta plutsi lyöntilinjalle, vedä taakse ja päästä irti.', wait:'Odota, että kaikki nappulat pysähtyvät.', over:'Peli päättyi. Aloita uusi peli.', newGame:'Uusi peli', undo:'Kumoa lyönti', apply:'Käytä', aim:'Tähtäysapu', sound:'Äänet', off:'pois', on:'päällä', controls:'Ohjaus: vedä suurta lyöntinappulaa (“plutsi/limppu”). Nuoli näyttää suunnan ja voiman. R-näppäin peruu viritetyn lyönnin ennen laukaisua.', rules:'Toteutetut säännöt', log:'Lyöntiloki', players:['Punainen','Sininen','Vihreä','Keltainen'], rowSetup:'Suomalainen riviasettelu', centerSetup:'Keskirinki / Couronne -asettelu', newLog:'Uusi peli', own:'omaa', opponents:'vastustajan', nothing:'ei pussiin menneitä', strikerFoul:'plutsi meni pussiin', returned:'yksi oma nappula palautettiin', wins:'voittaa!', draw:'Tasapeli', shot:'löi', potted:'pussiin', foulMix:'oma ja vastustajan nappula meni pussiin', multiplayerNote:'3–4 pelaajan pelissä jokaisella värillä on 8 nappulaa ja lyönti tapahtuu oman aloitusrivin vastakkaiselta sivulta.', human:'Ihminen', computer:'Tietokone', easyAI:'Helppo AI', hardAI:'Vaikea AI', impossibleAI:'Mahdoton AI', inactive:'Ei käytössä', botPlayers:'Tietokonepelaajat', botThinking:'Tietokone tähtää…', botShot:'Tietokoneen lyönti', credit:'Peli: Trassel Vardias'
+    tagline:'Suomalainen lautabiljardi — paikallinen 2–4 pelaajan selainversio', turn:'Vuoro', help:'Aseta plutsi lyöntilinjalle, vedä taakse ja päästä irti.', wait:'Odota, että kaikki nappulat pysähtyvät.', over:'Peli päättyi. Aloita uusi peli.', newGame:'Uusi peli', undo:'Kumoa lyönti', apply:'Käytä', aim:'Tähtäysapu', sound:'Äänet', off:'pois', on:'päällä', controls:'Ohjaus: vedä suurta lyöntinappulaa (“plutsi/limppu”). Nuoli näyttää suunnan ja voiman. R-näppäin peruu viritetyn lyönnin ennen laukaisua.', rules:'Toteutetut säännöt', log:'Lyöntiloki', players:['Punainen','Sininen','Vihreä','Keltainen'], rowSetup:'Suomalainen riviasettelu', centerSetup:'Keskirinki / Couronne -asettelu', newLog:'Uusi peli', own:'omaa', opponents:'vastustajan', nothing:'ei pussiin menneitä', strikerFoul:'plutsi meni pussiin', returned:'yksi oma nappula palautettiin', wins:'voittaa!', draw:'Tasapeli', shot:'löi', potted:'pussiin', foulMix:'oma ja vastustajan nappula meni pussiin', multiplayerNote:'3–4 pelaajan pelissä jokaisella värillä on 8 nappulaa ja lyönti tapahtuu oman aloitusrivin vastakkaiselta sivulta.', human:'Ihminen', computer:'Tietokone', easyAI:'Helppo AI', intermediateAI:'Keskitaso AI', hardAI:'Vaikea AI', impossibleAI:'Mahdoton AI', inactive:'Ei käytössä', botPlayers:'Tietokonepelaajat', botThinking:'Tietokone tähtää…', botShot:'Tietokoneen lyönti', credit:'Peli: Trassel Vardias', woodScheme:'Perinteinen puu', finnishScheme:'Suomi sinivalkoinen', walnutScheme:'Tumma pähkinä'
   },
   sv:{
-    tagline:'Finsk brädbiljard — lokal webbläsarversion för 2–4 spelare', turn:'Tur', help:'Placera köbrickan på din slaglinje, dra bakåt och släpp.', wait:'Vänta tills alla brickor har stannat.', over:'Spelet är slut. Starta ett nytt spel.', newGame:'Nytt spel', undo:'Ångra slag', apply:'Använd', aim:'Sikthjälp', sound:'Ljud', off:'av', on:'på', controls:'Kontroller: dra den stora köbrickan (“plutsi/limppu”). Pilen visar riktning och kraft. Tryck R för att avbryta ett laddat slag före skottet.', rules:'Implementerade regler', log:'Slaglogg', players:['Röd','Blå','Grön','Gul'], rowSetup:'Finsk raduppställning', centerSetup:'Centercirkel / Couronne', newLog:'Nytt spel', own:'egna', opponents:'motståndares', nothing:'inget i hål', strikerFoul:'köbrickan i hål', returned:'en egen bricka återställdes', wins:'vinner!', draw:'Oavgjort', shot:'slag', potted:'i hål', foulMix:'egna och motståndares brickor i hål', multiplayerNote:'I 3–4-spelarläget har varje färg 8 brickor och slår från sidan mittemot sin startrad.', human:'Människa', computer:'Dator', easyAI:'Lätt AI', hardAI:'Svår AI', impossibleAI:'Omöjlig AI', inactive:'Inaktiv', botPlayers:'Datorspelare', botThinking:'Datorn siktar…', botShot:'Datorslag', credit:'Spel av Trassel Vardias'
+    tagline:'Finsk brädbiljard — lokal webbläsarversion för 2–4 spelare', turn:'Tur', help:'Placera köbrickan på din slaglinje, dra bakåt och släpp.', wait:'Vänta tills alla brickor har stannat.', over:'Spelet är slut. Starta ett nytt spel.', newGame:'Nytt spel', undo:'Ångra slag', apply:'Använd', aim:'Sikthjälp', sound:'Ljud', off:'av', on:'på', controls:'Kontroller: dra den stora köbrickan (“plutsi/limppu”). Pilen visar riktning och kraft. Tryck R för att avbryta ett laddat slag före skottet.', rules:'Implementerade regler', log:'Slaglogg', players:['Röd','Blå','Grön','Gul'], rowSetup:'Finsk raduppställning', centerSetup:'Centercirkel / Couronne', newLog:'Nytt spel', own:'egna', opponents:'motståndares', nothing:'inget i hål', strikerFoul:'köbrickan i hål', returned:'en egen bricka återställdes', wins:'vinner!', draw:'Oavgjort', shot:'slag', potted:'i hål', foulMix:'egna och motståndares brickor i hål', multiplayerNote:'I 3–4-spelarläget har varje färg 8 brickor och slår från sidan mittemot sin startrad.', human:'Människa', computer:'Dator', easyAI:'Lätt AI', intermediateAI:'Mellan AI', hardAI:'Svår AI', impossibleAI:'Omöjlig AI', inactive:'Inaktiv', botPlayers:'Datorspelare', botThinking:'Datorn siktar…', botShot:'Datorslag', credit:'Spel av Trassel Vardias', woodScheme:'Klassiskt trä', finnishScheme:'Finländsk blåvit', walnutScheme:'Mörk valnöt'
   }
 };
-let lang='en', variant='rows', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=true;
+let lang='en', variant='rows', boardScheme='wood', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=true;
 let aiMode={red:'human',blue:'easy',green:'human',yellow:'human'}, botPending=false;
-let centerSymbol='joulutorttu', trasselTapCount=0, trasselTapTimer=null, spiralSpin=false, spiralAngle=0;
-let lastSnapshot=null, shotEvents=null, lastFrameTime=null, physicsAccumulator=0;
+let centerSymbol='joulutorttu', trasselTapCount=0, trasselTapTimer=null, spiralSpin=false, spiralAngle=0, boardRainbow=false, centerTapCount=0, centerTapTimer=null;
+let lastSnapshot=null, shotEvents=null, lastFrameTime=null, physicsAccumulator=0, aiActing=null;
 const turnText=document.getElementById('turnText'), help=document.getElementById('help'), scoreBox=document.getElementById('scoreBox'), logEl=document.getElementById('log'), winText=document.getElementById('winText');
 function tr(){return T[lang]||T.en} function capColor(c){return tr().players[['red','blue','green','yellow'].indexOf(c)]||c}
-function cloneState(){return JSON.stringify({variant,playerCount,players,current,bodies,striker,won,lang,aiMode});}
+function cloneState(){return JSON.stringify({variant,boardScheme,playerCount,players,current,bodies,striker,won,lang,aiMode,boardRainbow,centerSymbol,spiralSpin,spiralAngle});}
 function restoreState(s){
  if(!s)return;
- lastFrameTime=null; physicsAccumulator=0;
+ lastFrameTime=null; physicsAccumulator=0; aiActing=null; dragging=false; dragFrom=null; dragNow=null;
  const o=JSON.parse(s);
- variant=o.variant; playerCount=o.playerCount||2; players=o.players||playerOrders[playerCount];
+ variant=o.variant; boardScheme=o.boardScheme||boardScheme; playerCount=o.playerCount||2; players=o.players||playerOrders[playerCount];
  current=o.current; bodies=o.bodies; striker=o.striker; won=o.won; lang=o.lang||lang;
+ boardRainbow=!!o.boardRainbow; centerSymbol=o.centerSymbol||centerSymbol; spiralSpin=!!o.spiralSpin; spiralAngle=o.spiralAngle||0;
  if(o.aiMode) aiMode=o.aiMode;
  else if(o.botMode) aiMode={red:o.botMode.red?'easy':'human',blue:o.botMode.blue?'easy':'human',green:o.botMode.green?'easy':'human',yellow:o.botMode.yellow?'easy':'human'};
  botPending=false;
@@ -178,7 +232,7 @@ function shootPoint(player){ const s=playerDefs[player].shoot; const pad=92; ret
 function shootingLine(player){ const s=playerDefs[player].shoot, pad=92; if(s==='top'||s==='bottom') return {axis:'y', value:s==='top'?minY+pad:maxY-pad, from:minX+90, to:maxX-90}; return {axis:'x', value:s==='left'?minX+pad:maxX-pad, from:minY+90, to:maxY-90}; }
 function placeFreeNear(x,y,r=discR){ const all=()=>bodies.concat(striker?[striker]:[]); for(let ring=0; ring<20; ring++){ const n=Math.max(8,ring*8); for(let a=0; a<n; a++){ let ang=a/n*Math.PI*2, nx=x+Math.cos(ang)*ring*(r*1.15), ny=y+Math.sin(ang)*ring*(r*1.15); if(nx<minX+r||nx>maxX-r||ny<minY+r||ny>maxY-r) continue; if(!all().some(b=>!b.pocketed && dist(nx,ny,b.x,b.y)<r+b.r+2)) return {x:nx,y:ny}; }} return {x:W/2,y:H/2};}
 function body(id,color,x,y,r=discR){return {id,color,x,y,vx:0,vy:0,r,m:r*r,pocketed:false,startX:x,startY:y};}
-function resetGame(){ lastFrameTime=null; physicsAccumulator=0; dragging=false; dragFrom=null; dragNow=null; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
+function resetGame(){ lastFrameTime=null; physicsAccumulator=0; aiActing=null; dragging=false; dragFrom=null; dragNow=null; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
 else { const pts=centerPatternPositions(players.length); pts.forEach((p,i)=>bodies.push(body(id++,players[i%players.length],p.x,p.y))); }
  resetStriker(null,true); lastSnapshot=null; log(`${tr().newLog}: ${variant==='rows'?tr().rowSetup:tr().centerSetup}, ${playerCount} players.`); updateText(); updateUI();}
 function active(){return bodies.filter(b=>!b.pocketed).concat(striker && !striker.pocketed ? [striker] : []);} function dist(a,b,c,d){return Math.hypot(a-c,b-d);} function speed(b){return Math.hypot(b.vx,b.vy);}
@@ -215,7 +269,7 @@ function updateBotControls(){
  order.map(pl=>{
    const active=players.includes(pl);
    const dis=active?'':'disabled';
-   return `<label><span><span class="pill ${pl}">${capColor(pl)}</span></span><select data-ai="${pl}" ${dis}><option value="human">${active?tr().human:tr().inactive}</option><option value="easy">${tr().easyAI}</option><option value="hard">${tr().hardAI}</option><option value="impossible">${tr().impossibleAI}</option></select></label>`;
+   return `<label><span><span class="pill ${pl}">${capColor(pl)}</span></span><select data-ai="${pl}" ${dis}><option value="human">${active?tr().human:tr().inactive}</option><option value="easy">${tr().easyAI}</option><option value="intermediate">${tr().intermediateAI}</option><option value="hard">${tr().hardAI}</option><option value="impossible">${tr().impossibleAI}</option></select></label>`;
  }).join('');
  box.querySelectorAll('select[data-ai]').forEach(sel=>{
    const pl=sel.dataset.ai;
@@ -224,7 +278,13 @@ function updateBotControls(){
  });
 }
 function isComputerTurn(){ return players.includes(current) && aiMode[current] && aiMode[current]!=='human'; }
-function updateText(){ document.documentElement.lang=lang; document.getElementById('tagline').textContent=tr().tagline; document.getElementById('newBtn').textContent=tr().newGame; document.getElementById('undoBtn').textContent=tr().undo; document.getElementById('applyVariant').textContent=tr().apply; document.getElementById('botBtn').textContent=`${tr().aim}: ${aimHelper?tr().on:tr().off}`; document.getElementById('soundBtn').textContent=`${tr().sound}: ${sound?tr().on:tr().off}`; document.getElementById('controls').innerHTML=tr().controls.replace('R','<kbd>R</kbd>'); document.getElementById('credit').textContent=tr().credit; document.getElementById('rulesSummary').textContent=tr().rules; updateBotControls(); document.getElementById('logSummary').textContent=tr().log; const v=document.getElementById('variant'); v.options[0].textContent=tr().rowSetup; v.options[1].textContent=tr().centerSetup; const ps=document.getElementById('players'); [...ps.options].forEach((o,i)=>o.textContent=`${i+2} ${i===0?'players':'players'}`); if(lang==='fi') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} pelaajaa`); if(lang==='sv') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} spelare`); const rules=[`2–4 players; ${players.map(capColor).join(', ')}.`, `${tr().botPlayers}: ${players.filter(pl=>aiMode[pl]&&aiMode[pl]!=='human').map(pl=>`${capColor(pl)} (${aiLabel(pl)})`).join(', ')||'—'}.`, tr().multiplayerNote, 'Default Finnish setup: pieces begin in rows against board edges; center setup is available as a variant.', 'Pot your own discs in any corner pocket. Potting an own disc earns another shot.', 'Potting only opponent discs gives those players credit and passes the turn.', 'Potting the striker is a foul: one of your already potted discs is returned, and the turn passes.', 'If your shot pots both your own and opponent discs, the opponent keeps theirs, one of yours is returned, and the turn passes.'];
+function updateText(){ document.documentElement.lang=lang; document.getElementById('tagline').textContent=tr().tagline; document.getElementById('newBtn').textContent=tr().newGame; document.getElementById('undoBtn').textContent=tr().undo; document.getElementById('applyVariant').textContent=tr().apply; document.getElementById('botBtn').textContent=`${tr().aim}: ${aimHelper?tr().on:tr().off}`; document.getElementById('soundBtn').textContent=`${tr().sound}: ${sound?tr().on:tr().off}`; document.getElementById('controls').innerHTML=tr().controls.replace('R','<kbd>R</kbd>'); document.getElementById('credit').textContent=tr().credit; document.getElementById('rulesSummary').textContent=tr().rules; updateBotControls(); document.getElementById('logSummary').textContent=tr().log; const v=document.getElementById('variant'); v.options[0].textContent=tr().rowSetup; v.options[1].textContent=tr().centerSetup; const sc=document.getElementById('scheme');
+ if(sc){
+   sc.options[0].textContent=tr().woodScheme;
+   sc.options[1].textContent=tr().finnishScheme;
+   sc.options[2].textContent=tr().walnutScheme;
+ }
+ const ps=document.getElementById('players'); [...ps.options].forEach((o,i)=>o.textContent=`${i+2} ${i===0?'players':'players'}`); if(lang==='fi') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} pelaajaa`); if(lang==='sv') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} spelare`); const rules=[`2–4 players; ${players.map(capColor).join(', ')}.`, `${tr().botPlayers}: ${players.filter(pl=>aiMode[pl]&&aiMode[pl]!=='human').map(pl=>`${capColor(pl)} (${aiLabel(pl)})`).join(', ')||'—'}.`, tr().multiplayerNote, 'Default Finnish setup: pieces begin in rows against board edges; center setup is available as a variant.', 'Pot your own discs in any corner pocket. Potting an own disc earns another shot.', 'Potting only opponent discs gives those players credit and passes the turn.', 'Potting the striker is a foul: one of your already potted discs is returned, and the turn passes.', 'If your shot pots both your own and opponent discs, the opponent keeps theirs, one of yours is returned, and the turn passes.'];
  if(lang==='fi') rules.splice(2,5,'Oletusasettelu: nappulat alkavat riveissä laudan reunoilla; keskirinki on vaihtoehtoinen asettelu.','Pussita omia nappuloita mihin tahansa kulmapussiin. Oma pussitus antaa uuden lyönnin.','Pelkkien vastustajan nappuloiden pussitus hyvitetään vastustajille ja vuoro vaihtuu.','Plutsin pussitus on virhe: yksi jo pussitettu oma nappula palautetaan ja vuoro vaihtuu.','Jos samassa lyönnissä menee oma ja vastustajan nappula, vastustaja saa pisteen, yksi oma palautetaan ja vuoro vaihtuu.');
  if(lang==='sv') rules.splice(2,5,'Standarduppställning: brickorna börjar i rader vid kanterna; centercirkel finns som variant.','Sänk dina egna brickor i valfritt hörnhål. En egen sänkt bricka ger ett nytt slag.','Endast motståndarbrickor ger dem poäng och turen går vidare.','Köbrickan i hål är foul: en redan sänkt egen bricka återställs och turen går vidare.','Om både egna och motståndares brickor sänks behåller motståndaren sina, en egen återställs och turen går vidare.');
  document.getElementById('rulesList').innerHTML=rules.map(r=>`<li>${r}</li>`).join(''); updateUI();}
@@ -236,9 +296,9 @@ function guideLayout(){
  return {left,right,top,bottom,circleR:34};
 }
 function drawBoardGuides(){
- const g=guideLayout();
+ const g=guideLayout(), pal=scheme();
  ctx.save();
- ctx.strokeStyle='rgba(255,248,220,.9)';
+ ctx.strokeStyle=pal.guideStrong;
  ctx.lineWidth=4;
  ctx.setLineDash([]);
  ctx.beginPath();
@@ -262,8 +322,9 @@ function drawJoulutorttu(cx,cy,size){
  const D = Math.min(size, 62);   // diamond vertex radius
  const L = D;                    // leg length of each 90° triangle
  const C = Math.round(D * 0.30); // central overlap offset
- const board = '#c99355';
- const dark = 'rgb(72,42,23)';
+ const pal = scheme();
+ const board = pal.symbolCutout || pal.board;
+ const dark = pal.symbol;
 
  // Diamond base: outline only, same color as the blades.
  ctx.beginPath();
@@ -320,7 +381,7 @@ function drawTrasselSpiral(cx,cy,size){
  // choose u so 2.5u*sqrt(2) stays just under size.
  const radius = Math.min(size, 96) - 2;
  const unit = radius / (2.5 * Math.SQRT2);
- const dark = 'rgb(72,42,23)';
+ const dark = scheme().symbol;
  ctx.fillStyle = dark;
 
  function boxCells(x,y,w,h){
@@ -340,26 +401,166 @@ function drawTrasselSpiral(cx,cy,size){
  ctx.restore();
 }
 
-function draw(){ ctx.clearRect(0,0,W,H); ctx.save(); const grd=ctx.createLinearGradient(0,0,W,H); grd.addColorStop(0,'#d5a466'); grd.addColorStop(.55,'#b87d40'); grd.addColorStop(1,'#8c572d'); ctx.fillStyle=grd; roundRect(0,0,W,H,18); ctx.fill(); ctx.strokeStyle='#68401f'; ctx.lineWidth=22; ctx.strokeRect(minX-11,minY-11,maxX-minX+22,maxY-minY+22); ctx.fillStyle='#c99355'; ctx.fillRect(minX,minY,maxX-minX,maxY-minY);
- ctx.strokeStyle='rgba(255,248,220,.72)'; ctx.lineWidth=3; ctx.setLineDash([12,9]); ctx.beginPath(); ctx.arc(W/2,H/2,96,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); if(centerSymbol==='spiral'){ drawTrasselSpiral(W/2,H/2,96); } else { drawJoulutorttu(W/2,H/2,62); } drawBoardGuides();
- for(const p of pockets){ ctx.fillStyle='#2a170e'; ctx.beginPath(); ctx.arc(p.x,p.y,pocketR,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#e3bc80'; ctx.lineWidth=5; ctx.stroke(); }
+function draw(){
+ ctx.clearRect(0,0,W,H);
  ctx.save();
- ctx.fillStyle='rgba(86,49,25,.82)';
- ctx.font='800 18px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+ // Rainbow secret uses a dedicated consistent classic-wood presentation so it doesn't clash
+ // with whichever board scheme was previously selected.
+ const pal=boardRainbow ? boardSchemes.wood : scheme();
+
+ // Fill the entire canvas with the active presentation.
+ canvas.style.background=pal.canvas;
+ ctx.fillStyle=pal.canvas;
+ ctx.fillRect(0,0,W,H);
+
+ // Full board frame.
+ const frameGrad=ctx.createLinearGradient(0,0,W,H);
+ frameGrad.addColorStop(0,pal.frame0);
+ frameGrad.addColorStop(.55,pal.frame1);
+ frameGrad.addColorStop(1,pal.frame2);
+ ctx.fillStyle=frameGrad;
+ roundRect(0,0,W,H,18);
+ ctx.fill();
+
+ ctx.strokeStyle=pal.frameOuter;
+ ctx.lineWidth=26;
+ roundRect(13,13,W-26,H-26,18);
+ ctx.stroke();
+
+ ctx.strokeStyle=pal.frameInner;
+ ctx.lineWidth=12;
+ roundRect(34,34,W-68,H-68,14);
+ ctx.stroke();
+
+ ctx.strokeStyle=pal.railOuter;
+ ctx.lineWidth=32;
+ ctx.strokeRect(minX-16,minY-16,maxX-minX+32,maxY-minY+32);
+ ctx.strokeStyle=pal.rail;
+ ctx.lineWidth=22;
+ ctx.strokeRect(minX-11,minY-11,maxX-minX+22,maxY-minY+22);
+ ctx.strokeStyle=pal.railInner;
+ ctx.lineWidth=5;
+ ctx.strokeRect(minX-2,minY-2,maxX-minX+4,maxY-minY+4);
+
+ if(boardRainbow){
+   // A brighter but coherent rainbow surface, always paired with the classic wood frame.
+   ctx.fillStyle=pal.board;
+   ctx.fillRect(minX,minY,maxX-minX,maxY-minY);
+   const rainbow=[
+     'rgba(216,68,58,.76)',
+     'rgba(231,137,42,.74)',
+     'rgba(232,194,57,.72)',
+     'rgba(64,162,82,.74)',
+     'rgba(61,109,214,.74)',
+     'rgba(137,68,181,.74)'
+   ];
+   const stripeH=(maxY-minY)/rainbow.length;
+   for(let i=0;i<rainbow.length;i++){
+     ctx.fillStyle=rainbow[i];
+     ctx.fillRect(minX,minY+i*stripeH,maxX-minX,stripeH+1);
+   }
+ } else {
+   ctx.fillStyle=pal.board;
+   ctx.fillRect(minX,minY,maxX-minX,maxY-minY);
+ }
+
+ // Center circle: outline only for every theme.
+ ctx.save();
+ ctx.strokeStyle=pal.centerStroke;
+ ctx.lineWidth=3;
+ ctx.setLineDash([]);
+ ctx.beginPath();
+ ctx.arc(W/2,H/2,96,0,Math.PI*2);
+ ctx.stroke();
+ ctx.restore();
+
+ if(centerSymbol==='spiral'){ drawTrasselSpiral(W/2,H/2,96); } else { drawJoulutorttu(W/2,H/2,62); }
+ drawBoardGuides();
+
+ for(const p of pockets){
+   ctx.fillStyle=pal.pocket;
+   ctx.beginPath();
+   ctx.arc(p.x,p.y,pocketR,0,Math.PI*2);
+   ctx.fill();
+   ctx.strokeStyle=pal.pocketRing;
+   ctx.lineWidth=5;
+   ctx.stroke();
+ }
+
+ ctx.save();
+ ctx.fillStyle=pal.credit;
+ ctx.font='800 22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
  ctx.textAlign='center';
  ctx.textBaseline='middle';
- ctx.fillText('Korona by Trassel Vardias', W/2, H/2+132);
+ ctx.fillText('Korona by Trassel Vardias', W/2, H/2+160);
  ctx.restore();
- for(const b of bodies.filter(b=>!b.pocketed)) drawDisc(b); if(striker&&!striker.pocketed) drawDisc(striker);
- if(dragging&&dragFrom&&dragNow&&!moving&&!won){ const vx=(dragFrom.x-dragNow.x), vy=(dragFrom.y-dragNow.y), pow=Math.min(160,Math.hypot(vx,vy)); const scale=pow?Math.min(1,160/pow):1; ctx.strokeStyle='rgba(30,20,10,.65)'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(striker.x,striker.y); ctx.lineTo(striker.x+vx*scale*1.25,striker.y+vy*scale*1.25); ctx.stroke(); ctx.fillStyle='rgba(30,20,10,.65)'; ctx.beginPath(); ctx.arc(striker.x+vx*scale*1.25,striker.y+vy*scale*1.25,8+pow/16,0,Math.PI*2); ctx.fill(); }
- if(aimHelper&&!moving&&!won) drawAimGuide(); ctx.restore();}
-function drawDisc(b){ ctx.save(); ctx.translate(b.x,b.y); ctx.fillStyle=b.color==='striker'?colors.striker:colors[b.color]; ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(70,38,18,.85)'; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle='rgba(255,255,255,.22)'; ctx.beginPath(); ctx.arc(-b.r*.35,-b.r*.35,b.r*.23,0,Math.PI*2); ctx.fill(); ctx.fillStyle='rgba(0,0,0,.2)'; ctx.beginPath(); ctx.arc(0,0,b.r*.27,0,Math.PI*2); ctx.fill(); ctx.restore();}
-function drawAimGuide(){ let targets=bodies.filter(b=>!b.pocketed&&b.color===current); ctx.save(); ctx.globalAlpha=.55; ctx.strokeStyle='#fff6'; ctx.lineWidth=2; for(const t of targets){ for(const p of pockets){ if(clearLine(t.x,t.y,p.x,p.y,t.r)){ctx.beginPath(); ctx.moveTo(t.x,t.y); ctx.lineTo(p.x,p.y); ctx.stroke();} } } ctx.restore();}
+
+ for(const b of bodies.filter(b=>!b.pocketed)) drawDisc(b);
+ if(striker&&!striker.pocketed) drawDisc(striker);
+
+ if(dragging&&dragFrom&&dragNow&&!moving&&!won){
+   const vx=(dragFrom.x-dragNow.x), vy=(dragFrom.y-dragNow.y), pow=Math.min(160,Math.hypot(vx,vy));
+   const scale=pow?Math.min(1,160/pow):1;
+   ctx.strokeStyle=pal.drag;
+   ctx.lineWidth=6;
+   ctx.lineCap='round';
+   ctx.beginPath();
+   ctx.moveTo(striker.x,striker.y);
+   ctx.lineTo(striker.x+vx*scale*1.25,striker.y+vy*scale*1.25);
+   ctx.stroke();
+   ctx.fillStyle=pal.drag;
+   ctx.beginPath();
+   ctx.arc(striker.x+vx*scale*1.25,striker.y+vy*scale*1.25,8+pow/16,0,Math.PI*2);
+   ctx.fill();
+ }
+ if(aimHelper&&!moving&&!won) drawAimGuide();
+ ctx.restore();
+}
+function drawDisc(b){
+ const pal=scheme();
+ ctx.save();
+ ctx.translate(b.x,b.y);
+ ctx.fillStyle=b.color==='striker'?colors.striker:colors[b.color];
+ ctx.beginPath();
+ ctx.arc(0,0,b.r,0,Math.PI*2);
+ ctx.fill();
+ ctx.strokeStyle=pal.discStroke;
+ ctx.lineWidth=3;
+ ctx.stroke();
+ ctx.fillStyle=pal.discHighlight;
+ ctx.beginPath();
+ ctx.arc(-b.r*.35,-b.r*.35,b.r*.23,0,Math.PI*2);
+ ctx.fill();
+ ctx.fillStyle=pal.discShade;
+ ctx.beginPath();
+ ctx.arc(0,0,b.r*.27,0,Math.PI*2);
+ ctx.fill();
+ ctx.restore();
+}
+function drawAimGuide(){
+ const pal=scheme();
+ let targets=bodies.filter(b=>!b.pocketed&&b.color===current);
+ ctx.save();
+ ctx.globalAlpha=1;
+ ctx.strokeStyle=pal.aimGuide;
+ ctx.lineWidth=2;
+ for(const t of targets){
+   for(const p of pockets){
+     if(clearLine(t.x,t.y,p.x,p.y,t.r)){
+       ctx.beginPath();
+       ctx.moveTo(t.x,t.y);
+       ctx.lineTo(p.x,p.y);
+       ctx.stroke();
+     }
+   }
+ }
+ ctx.restore();
+}
 function clearLine(x1,y1,x2,y2,r){ return bodies.every(b=>b.pocketed||distPointLine(b.x,b.y,x1,y1,x2,y2)>b.r+r||dist(b.x,b.y,x1,y1)<2);} function distPointLine(px,py,x1,y1,x2,y2){ const A=px-x1,B=py-y1,C=x2-x1,D=y2-y1,dot=A*C+B*D,len=C*C+D*D,t=Math.max(0,Math.min(1,dot/len)); return dist(px,py,x1+C*t,y1+D*t);} function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y,x,y+r,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function pointForLine(line,key){ return line.axis==='y'?{x:key,y:line.value}:{x:line.value,y:key}; }
 function clearShotLine(x1,y1,x2,y2,ignoreIds=[]){ return bodies.every(b=>b.pocketed||ignoreIds.includes(b.id)||distPointLine(b.x,b.y,x1,y1,x2,y2)>b.r+strikerR*.75); }
-function aiLabel(pl){ return aiMode[pl]==='impossible'?tr().impossibleAI:(aiMode[pl]==='hard'?tr().hardAI:tr().easyAI); }
+function aiLabel(pl){ return aiMode[pl]==='impossible'?tr().impossibleAI:(aiMode[pl]==='hard'?tr().hardAI:(aiMode[pl]==='intermediate'?tr().intermediateAI:tr().easyAI)); }
 function baseAiCandidates(limit=24){
  const line=shootingLine(current), own=bodies.filter(b=>!b.pocketed&&b.color===current);
  let cands=[];
@@ -442,6 +643,23 @@ function botChooseShotEasy(){
  if(!best) return {start:shootPoint(current),aim:{x:W/2,y:H/2},power:12,wobble:0.16};
  const d=dist(best.start.x,best.start.y,best.aim.x,best.aim.y);
  return {start:best.start,aim:best.aim,power:clamp(d*.096+7.8,9.5,25.0)*(0.96+Math.random()*0.22),wobble:(Math.random()-.5)*0.16};
+}
+
+function botChooseShotIntermediate(){
+ const candidates=baseAiCandidates(20), powers=[0.92,1.04,1.18];
+ let best=null;
+ for(const cand of candidates){
+   const d=dist(cand.start.x,cand.start.y,cand.aim.x,cand.aim.y);
+   const basePower=clamp(d*.100+8.0,10.0,26.0);
+   for(const mult of powers){
+     const power=basePower*mult;
+     const sim=simulateAiShot(cand,power);
+     const score=sim.score+cand.base*.06 + (sim.own>0 && sim.opp===0 && !sim.strikerPocket ? 1200 : 0);
+     if(!best||score>best.score) best={start:cand.start,aim:cand.aim,power,score,sim,wobble:(Math.random()-.5)*0.045};
+   }
+ }
+ if(best) return best;
+ return botChooseShotEasy();
 }
 function cloneForAi(){
  const simBodies=bodies.filter(b=>!b.pocketed).map(b=>({id:b.id,color:b.color,x:b.x,y:b.y,vx:0,vy:0,r:b.r,m:b.m,pocketed:false}));
@@ -584,22 +802,84 @@ function botChooseShotImpossible(){
  return botChooseShotHard();
 }
 
-function botChooseShot(){ return aiMode[current]==='impossible'?botChooseShotImpossible():(aiMode[current]==='hard'?botChooseShotHard():botChooseShotEasy()); }
-function botShoot(){
- if(moving||won||!isComputerTurn()||shotEvents) return;
+function botChooseShot(){ return aiMode[current]==='impossible'?botChooseShotImpossible():(aiMode[current]==='hard'?botChooseShotHard():(aiMode[current]==='intermediate'?botChooseShotIntermediate():botChooseShotEasy())); }
+function startBotHumanLikeTurn(){
+ if(moving||won||!isComputerTurn()||shotEvents||aiActing) return;
  const shot=botChooseShot();
- const start=placeFreeNear(shot.start.x,shot.start.y,strikerR);
- striker.x=start.x; striker.y=start.y;
- const dx=shot.aim.x-start.x, dy=shot.aim.y-start.y, d=Math.hypot(dx,dy)||1;
+ const targetStart=placeFreeNear(shot.start.x,shot.start.y,strikerR);
+ const dx=shot.aim.x-targetStart.x, dy=shot.aim.y-targetStart.y, d=Math.hypot(dx,dy)||1;
  const wobble=shot.wobble||0;
  const ca=Math.cos(wobble), sa=Math.sin(wobble);
  const ux=(dx/d)*ca-(dy/d)*sa, uy=(dx/d)*sa+(dy/d)*ca;
- lastSnapshot=cloneState(); shotEvents={potted:[],strikerPocket:false};
- striker.vx=ux*shot.power; striker.vy=uy*shot.power;
- physicsAccumulator=0; lastFrameTime=null; moving=true;
+
+ // Human-like pull distance: same shot model as a human drag-release shot.
+ const pullMag=Math.min(165, Math.max(14, shot.power/0.125));
+ const fromX=striker?striker.x:targetStart.x, fromY=striker?striker.y:targetStart.y;
+ aiActing={
+   phase:'placing',
+   placeT:0,
+   aimT:0,
+   waitT:0,
+   placeMs: aiMode[current]==='easy'?260:(aiMode[current]==='intermediate'?300:(aiMode[current]==='hard'?330:390)),
+   aimMs: aiMode[current]==='easy'?330:(aiMode[current]==='intermediate'?380:(aiMode[current]==='hard'?440:540)),
+   holdMs: aiMode[current]==='easy'?70:(aiMode[current]==='intermediate'?85:(aiMode[current]==='hard'?105:140)),
+   fromX, fromY,
+   startX:targetStart.x, startY:targetStart.y,
+   pullX:ux*pullMag, pullY:uy*pullMag,
+   shotVX:ux*shot.power, shotVY:uy*shot.power
+ };
  log(`${tr().botShot}: ${capColor(current)} (${aiLabel(current)}).`);
 }
-function maybeAutoBot(){ if(botPending||moving||won||shotEvents||!isComputerTurn()) return; botPending=true; setTimeout(()=>{ botPending=false; botShoot(); }, aiMode[current]==='impossible'?250:(aiMode[current]==='hard'?450:650)); }
+function updateAiActing(elapsed){
+ if(!aiActing||moving||won) return;
+ if(aiActing.phase==='placing'){
+   aiActing.placeT=Math.min(1, aiActing.placeT + elapsed/aiActing.placeMs);
+   const t=aiActing.placeT;
+   const ease=t<1?1-Math.pow(1-t,2):1;
+   striker.x=aiActing.fromX + (aiActing.startX-aiActing.fromX)*ease;
+   striker.y=aiActing.fromY + (aiActing.startY-aiActing.fromY)*ease;
+   dragging=false; dragFrom=null; dragNow=null;
+   if(t>=1){
+     striker.x=aiActing.startX; striker.y=aiActing.startY;
+     aiActing.phase='aiming';
+   }
+   return;
+ }
+ if(aiActing.phase==='aiming'){
+   aiActing.aimT=Math.min(1, aiActing.aimT + elapsed/aiActing.aimMs);
+   const t=aiActing.aimT;
+   const ease=Math.sin(t*Math.PI*.5);
+   dragging=true;
+   dragFrom={x:striker.x,y:striker.y};
+   dragNow={x:striker.x-aiActing.pullX*ease,y:striker.y-aiActing.pullY*ease};
+   if(t>=1){
+     aiActing.phase='holding';
+     aiActing.waitT=0;
+   }
+   return;
+ }
+ if(aiActing.phase==='holding'){
+   dragging=true;
+   dragFrom={x:striker.x,y:striker.y};
+   dragNow={x:striker.x-aiActing.pullX,y:striker.y-aiActing.pullY};
+   aiActing.waitT += elapsed;
+   if(aiActing.waitT>=aiActing.holdMs){
+     lastSnapshot=cloneState(); shotEvents={potted:[],strikerPocket:false};
+     dragging=false; dragFrom=null; dragNow=null;
+     striker.vx=aiActing.shotVX; striker.vy=aiActing.shotVY;
+     physicsAccumulator=0; lastFrameTime=null; moving=true; aiActing=null;
+   }
+ }
+}
+function botShoot(){ startBotHumanLikeTurn(); }
+function maybeAutoBot(){
+ if(botPending||moving||won||shotEvents||aiActing||!isComputerTurn()) return;
+ botPending=true;
+ setTimeout(()=>{
+   botPending=false;
+   startBotHumanLikeTurn();
+ }, aiMode[current]==='impossible'?220:(aiMode[current]==='hard'?350:(aiMode[current]==='intermediate'?430:520)));
+}
 function loop(now){
  if(lastFrameTime==null) lastFrameTime=now;
  const elapsed=Math.min(100, now-lastFrameTime);
@@ -615,6 +895,7 @@ function loop(now){
    if(steps>=MAX_PHYSICS_STEPS) physicsAccumulator=0;
  } else {
    physicsAccumulator=0;
+   updateAiActing(elapsed);
    maybeAutoBot();
  }
  if(spiralSpin && centerSymbol==='spiral') spiralAngle -= elapsed * 0.0012;
@@ -624,7 +905,7 @@ function loop(now){
 }
 function pos(e){ const rect=canvas.getBoundingClientRect(), t=e.touches?e.touches[0]:e; return {x:(t.clientX-rect.left)*W/rect.width,y:(t.clientY-rect.top)*H/rect.height};}
 function linePlacement(p){ const l=shootingLine(current); if(l.axis==='y') return {ok:Math.abs(p.y-l.value)<55,x:p.x,y:l.value,key:p.x}; return {ok:Math.abs(p.x-l.value)<55,x:l.value,y:p.y,key:p.y};}
-canvas.addEventListener('pointerdown',e=>{ unlockAudio(); if(moving||won||isComputerTurn())return; const p=pos(e); if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok && isSafeStrikerPos(lp.x,lp.y)){ striker.x=lp.x; striker.y=lp.y; } } });
+canvas.addEventListener('pointerdown',e=>{ unlockAudio(); if(moving||won||isComputerTurn())return; const p=pos(e); if(dist(p.x,p.y,W/2,H/2)<=112){ triggerCenterSecret(); return; } if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok && isSafeStrikerPos(lp.x,lp.y)){ striker.x=lp.x; striker.y=lp.y; } } });
 canvas.addEventListener('pointermove',e=>{ if(dragging) dragNow=pos(e); });
 canvas.addEventListener('pointerup',e=>{ if(!dragging||moving||won||isComputerTurn())return; const p=pos(e); dragging=false; const vx=(dragFrom.x-p.x), vy=(dragFrom.y-p.y), power=Math.min(165,Math.hypot(vx,vy)); if(power<8) return; lastSnapshot=cloneState(); shotEvents={potted:[],strikerPocket:false}; striker.vx=vx*.125; striker.vy=vy*.125; physicsAccumulator=0; lastFrameTime=null; moving=true; });
 window.addEventListener('keydown',e=>{
@@ -636,10 +917,11 @@ window.addEventListener('keydown',e=>{
    if(striker){ striker.vx=0; striker.vy=0; }
  }
 });
-function syncControls(){ document.getElementById('variant').value=variant; document.getElementById('players').value=String(playerCount); document.getElementById('language').value=lang;}
+function syncControls(){ document.getElementById('variant').value=variant; document.getElementById('players').value=String(playerCount); document.getElementById('language').value=lang; document.getElementById('scheme').value=boardScheme;}
 document.getElementById('newBtn').onclick=resetGame; document.getElementById('undoBtn').onclick=()=>{restoreState(lastSnapshot); lastSnapshot=null; log(lang==='fi'?'Lyönti kumottu.':lang==='sv'?'Slaget ångrades.':'Undid last shot.');};
 document.getElementById('applyVariant').onclick=()=>{variant=document.getElementById('variant').value; playerCount=Number(document.getElementById('players').value); resetGame();};
 document.getElementById('language').onchange=e=>{lang=e.target.value; syncControls(); updateText();};
+document.getElementById('scheme').onchange=e=>{boardScheme=e.target.value; syncControls(); updateText(); updateUI();};
 document.getElementById('players').onchange=e=>{playerCount=Number(e.target.value); players=playerOrders[playerCount]; botPending=false; updateText();};
 document.getElementById('variant').onchange=e=>{variant=e.target.value;};
 document.getElementById('botBtn').onclick=()=>{aimHelper=!aimHelper; updateText();};
@@ -662,6 +944,18 @@ if(creditEl){
      clearTimeout(trasselTapTimer);
    }
  });
+}
+
+
+function triggerCenterSecret(){
+ centerTapCount++;
+ clearTimeout(centerTapTimer);
+ centerTapTimer=setTimeout(()=>{centerTapCount=0;},1200);
+ if(centerTapCount>=6){
+   boardRainbow=true;
+   centerTapCount=0;
+   clearTimeout(centerTapTimer);
+ }
 }
 
 ['pointerdown','touchstart','mousedown','keydown'].forEach(ev=>{
