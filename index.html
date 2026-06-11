@@ -47,6 +47,9 @@
 <!-- EVERY_LAYER_THEMED_V28 -->
 <!-- RAINBOW_FIXED_CENTER_OUTLINE_HUMANLIKE_AI_V29 -->
 <!-- INTERMEDIATE_AI_V30 -->
+<!-- RAINBOW_BLENDS_WITH_ACTIVE_SCHEME_V31 -->
+<!-- CENTER_CIRCLE_FILLED_BOARD_COLOR_V32 -->
+<!-- VIBRANT_RAINBOW_V33 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
@@ -406,7 +409,7 @@ function draw(){
  ctx.save();
  // Rainbow secret uses a dedicated consistent classic-wood presentation so it doesn't clash
  // with whichever board scheme was previously selected.
- const pal=boardRainbow ? boardSchemes.wood : scheme();
+ const pal=scheme();
 
  // Fill the entire canvas with the active presentation.
  canvas.style.background=pal.canvas;
@@ -443,16 +446,31 @@ function draw(){
  ctx.strokeRect(minX-2,minY-2,maxX-minX+4,maxY-minY+4);
 
  if(boardRainbow){
-   // A brighter but coherent rainbow surface, always paired with the classic wood frame.
+   // Rainbow secret now blends into the *currently selected* board theme
+   // instead of forcing the classic wood look underneath it.
    ctx.fillStyle=pal.board;
    ctx.fillRect(minX,minY,maxX-minX,maxY-minY);
-   const rainbow=[
-     'rgba(216,68,58,.76)',
-     'rgba(231,137,42,.74)',
-     'rgba(232,194,57,.72)',
-     'rgba(64,162,82,.74)',
-     'rgba(61,109,214,.74)',
-     'rgba(137,68,181,.74)'
+   const rainbow = boardScheme==='finnish' ? [
+     'rgba(236,72,64,.78)',
+     'rgba(247,146,38,.76)',
+     'rgba(247,208,43,.74)',
+     'rgba(52,184,88,.76)',
+     'rgba(46,120,241,.78)',
+     'rgba(154,72,214,.76)'
+   ] : boardScheme==='walnut' ? [
+     'rgba(212,76,66,.72)',
+     'rgba(228,132,42,.70)',
+     'rgba(229,188,52,.68)',
+     'rgba(69,156,83,.70)',
+     'rgba(63,116,214,.70)',
+     'rgba(142,72,188,.70)'
+   ] : [
+     'rgba(228,70,58,.76)',
+     'rgba(240,136,36,.74)',
+     'rgba(240,196,50,.72)',
+     'rgba(60,170,80,.74)',
+     'rgba(58,112,226,.74)',
+     'rgba(146,70,194,.74)'
    ];
    const stripeH=(maxY-minY)/rainbow.length;
    for(let i=0;i<rainbow.length;i++){
@@ -464,8 +482,12 @@ function draw(){
    ctx.fillRect(minX,minY,maxX-minX,maxY-minY);
  }
 
- // Center circle: outline only for every theme.
+ // Center circle filled with the active board color, with themed outline.
  ctx.save();
+ ctx.fillStyle=pal.board;
+ ctx.beginPath();
+ ctx.arc(W/2,H/2,96,0,Math.PI*2);
+ ctx.fill();
  ctx.strokeStyle=pal.centerStroke;
  ctx.lineWidth=3;
  ctx.setLineDash([]);
