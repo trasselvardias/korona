@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Korona by Trassel Vardias</title>
+<title>Korona Trassel Vardias</title>
 <style>
   :root{--bg:#1f201c;--panel:#2c2a24;--ink:#f6edda;--muted:#c9bfa9;--wood:#b67b42;--darkwood:#6f4326;--line:#efe4c6;--red:#cf4f61;--blue:#5185d9;--green:#55a868;--yellow:#d8b34c;}
   *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#38352c,#171713 70%);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
   header{padding:14px 18px;border-bottom:1px solid #ffffff18;background:#181812d9;backdrop-filter:blur(6px);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   h1{font-size:22px;margin:0;letter-spacing:.2px} .tag{color:var(--muted)}
   main{display:grid;grid-template-columns:minmax(320px,1fr) 380px;gap:16px;max-width:1240px;margin:0 auto;padding:16px}
-  #wrap{display:grid;place-items:center}.boardShell{width:min(92vw,760px);aspect-ratio:1;padding:18px;border-radius:24px;background:linear-gradient(145deg,#7b4a28,#c38a4e 45%,#6d3e23);box-shadow:0 24px 60px #0009,inset 0 0 0 5px #432616,inset 0 0 18px #fff2;}
+  #wrap{display:grid;place-items:center}.boardShell{width:min(92vw,760px);aspect-ratio:1;padding:8px;border-radius:24px;background:linear-gradient(145deg,#7b4a28,#c38a4e 45%,#6d3e23);box-shadow:0 24px 60px #0009,inset 0 0 0 5px #432616,inset 0 0 18px #fff2;}
   canvas{width:100%;height:100%;display:block;border-radius:14px;background:#c99658;box-shadow:inset 0 0 0 8px #6e3f22;touch-action:none;cursor:crosshair}
   aside{background:#222018e8;border:1px solid #ffffff1c;border-radius:18px;padding:16px;box-shadow:0 18px 45px #0006;align-self:start;position:sticky;top:12px}
   .status{padding:12px;border:1px solid #ffffff21;border-radius:14px;background:#00000025;margin-bottom:12px}.turn{font-size:19px;font-weight:700}.pill{display:inline-block;padding:2px 8px;border-radius:999px;margin-left:6px;color:#fff;text-shadow:0 1px 2px #0008}.red{background:var(--red)}.blue{background:var(--blue)}.green{background:var(--green)}.yellow{background:var(--yellow);color:#2b2110;text-shadow:none}
@@ -50,6 +50,23 @@
 <!-- RAINBOW_BLENDS_WITH_ACTIVE_SCHEME_V31 -->
 <!-- CENTER_CIRCLE_FILLED_BOARD_COLOR_V32 -->
 <!-- VIBRANT_RAINBOW_V33 -->
+<!-- THEME_MUSIC_MIDI_V34 -->
+<!-- LOUDER_SMOOTHER_AUDIO_V35 -->
+<!-- LOUDER_FX_PREDICTIVE_AIM_V36 -->
+<!-- STRIKER_LINE_FIREWORKS_RULES_RAINBOW_AUDIO_V37 -->
+<!-- SATURATED_FIREWORKS_V38 -->
+<!-- THEMED_BOARD_SURROUNDINGS_V39 -->
+<!-- FINNISH_UI_READABLE_FRAME_FIX_V40 -->
+<!-- GERMAN_UNLOCK_FIREWORK_OPTIMIZE_V41 -->
+<!-- GROUPED_CENTER_SYMBOL_ROTATION_V42 -->
+<!-- BOARD_CENTER_VERTEX_ROTATION_V43 -->
+<!-- FINNISH_FRAME_CONSISTENT_V44 -->
+<!-- SIMPLIFIED_UNIFORM_FRAMES_V45 -->
+<!-- REDONE_MINIMAL_OUTER_FRAME_V46 -->
+<!-- MATCHED_OUTER_FRAME_COLORS_V47 -->
+<!-- LIGHTER_OUTER_BOARD_AREAS_V48 -->
+<!-- DOUBLE_SPEED_OPTION_V49 -->
+<!-- FOUR_X_SPEED_OPTION_V50 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
@@ -69,32 +86,38 @@
     </div>
     <div class="row">
       <select id="language"><option value="en">English</option><option value="fi">Suomi</option><option value="sv">Svenska</option></select>
-      <select id="scheme"><option value="wood">Classic wood</option><option value="finnish">Finnish blue & white</option><option value="walnut">Dark walnut</option></select>
+      <select id="scheme"><option value="wood">Classic wood</option><option value="finnish">Finnish blue & white</option><option value="walnut">Dark walnut</option><option value="german" hidden>German red</option></select>
     </div>
     <div class="botGrid" id="botControls"></div>
-    <div class="row"><button id="botBtn"></button><button id="soundBtn"></button></div>
+    <div class="row"><button id="botBtn"></button><button id="speedBtn"></button><button id="soundBtn"></button><button id="musicBtn"></button></div>
     <p class="small" id="controls"></p>
     <p class="small" id="credit"></p>
-    <details open><summary id="rulesSummary"></summary><ul id="rulesList"></ul></details>
+    <details><summary id="rulesSummary"></summary><ul id="rulesList"></ul></details>
     <details><summary id="logSummary"></summary><div class="log" id="log"></div></details>
   </aside>
 </main>
 <script>
 (() => {
 'use strict';
-const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+const canvas = document.getElementById('game'), ctx = canvas.getContext('2d'), boardShell=document.querySelector('.boardShell'), sidePanel=document.querySelector('aside'), headerEl=document.querySelector('header');
 const W=900,H=900, rail=42, minX=rail, maxX=W-rail, minY=rail, maxY=H-rail;
 const pockets=[{x:70,y:70},{x:830,y:70},{x:70,y:830},{x:830,y:830}], pocketR=45;
 const discR=22, strikerR=28;
 // Fixed-step physics makes gameplay independent of display refresh rate.
 // These values are applied once per 60 Hz simulation step.
-const PHYSICS_DT_MS=1000/60, MAX_PHYSICS_STEPS=6;
+const PHYSICS_DT_MS=1000/60, MAX_PHYSICS_STEPS=12;
 const FRICTION=0.976, STOP_EPS=0.055, MOVING_EPS=0.09;
 const colors={red:'#cf4f61',blue:'#5185d9',green:'#55a868',yellow:'#d8b34c',striker:'#efe3c6'};
 const boardSchemes={
  wood:{
    // Classic wood keeps the original Korona board colors.
-   canvas:'#15130e',
+   pageBg:'radial-gradient(circle at top,#38352c,#171713 70%)',
+   headerBg:'#181812d9',panelBg:'#222018e8',
+   shellBg:'linear-gradient(145deg,#7b4a28,#c38a4e 45%,#6d3e23)',
+   shellShadow:'0 24px 60px #0009,inset 0 0 0 5px #432616,inset 0 0 18px #fff2',
+   canvasShadow:'inset 0 0 0 8px #6e3f22',
+   uiText:'#f6edda',uiMuted:'#c9bfa9',controlBg:'#3a3529',controlBorder:'#ffffff25',controlHover:'#494232',statusBg:'#00000025',logBg:'#11100c',
+   canvas:'#a66a34',simpleFrame:'#a66a34',simpleFrameEdge:'#5b341a',simpleFrameInner:'#c99355',
    frame0:'#d5a466',frame1:'#b87d40',frame2:'#8c572d',
    frameOuter:'#3f2411',frameInner:'#9a5c2b',
    railOuter:'#3f2411',rail:'#68401f',railInner:'#8d572a',
@@ -108,20 +131,32 @@ const boardSchemes={
  },
  finnish:{
    // Blue-white theme: every board layer is blue/white, no brown wood remains.
-   canvas:'#fafdff',
-   frame0:'#ffffff',frame1:'#edf8ff',frame2:'#caebff',
-   frameOuter:'#55afe4',frameInner:'#ffffff',
-   railOuter:'#ffffff',rail:'#55afe4',railInner:'#92d7ff',
+   pageBg:'radial-gradient(circle at top,#ffffff,#d9efff 58%,#9ed7ff 100%)',
+   headerBg:'#eaf7ffd9',panelBg:'#f6fbffe8',
+   shellBg:'#178fd4',
+   shellShadow:'0 24px 60px rgba(18,96,150,.30),inset 0 0 0 5px #075c95,inset 0 0 0 13px #178fd4',
+   canvasShadow:'inset 0 0 0 8px #0b77bd',
+   uiText:'#12324a',uiMuted:'#416f8d',controlBg:'#ffffff',controlBorder:'rgba(42,128,190,.38)',controlHover:'#e6f6ff',statusBg:'rgba(255,255,255,.76)',logBg:'#eaf7ff',
+   canvas:'#fafdff',simpleFrame:'#55afe4',simpleFrameEdge:'#2588c6',simpleFrameInner:'#fbfdff',
+   frame0:'#178fd4',frame1:'#178fd4',frame2:'#178fd4',
+   frameOuter:'#075c95',frameInner:'#178fd4',
+   railOuter:'#075c95',rail:'#178fd4',railInner:'#178fd4',
    board:'#fbfdff',
    guide:'rgba(85,175,228,.52)',guideStrong:'rgba(85,175,228,.74)',aimGuide:'rgba(0,88,158,.38)',
    centerFill:null,centerStroke:'rgba(85,175,228,.58)',
    symbol:'#55afe4',symbolCutout:'#fbfdff',
-   pocket:'#0d6597',pocketRing:'#a8e4ff',credit:'rgba(38,130,186,.90)',
+   pocket:'#073f68',pocketRing:'#dff5ff',credit:'rgba(38,130,186,.90)',
    discStroke:'rgba(20,88,135,.72)',discHighlight:'rgba(255,255,255,.34)',discShade:'rgba(0,73,130,.18)',
    drag:'rgba(0,88,158,.62)'
  },
  walnut:{
-   canvas:'#120905',
+   pageBg:'radial-gradient(circle at top,#3b2115,#120905 72%)',
+   headerBg:'#160b07dd',panelBg:'#1a0f0ae8',
+   shellBg:'linear-gradient(145deg,#1f0f08,#6e3f22 48%,#120905)',
+   shellShadow:'0 24px 60px #000b,inset 0 0 0 5px #120905,inset 0 0 22px rgba(245,194,124,.18)',
+   canvasShadow:'inset 0 0 0 8px #21110a',
+   uiText:'#f6edda',uiMuted:'#cdbb9a',controlBg:'#2b1810',controlBorder:'rgba(245,211,159,.22)',controlHover:'#3a2116',statusBg:'rgba(0,0,0,.24)',logBg:'#120905',
+   canvas:'#5a301a',simpleFrame:'#5a301a',simpleFrameEdge:'#21110a',simpleFrameInner:'#704221',
    frame0:'#8d5b34',frame1:'#5d351f',frame2:'#2d1810',
    frameOuter:'#120905',frameInner:'#6c3b20',
    railOuter:'#120905',rail:'#21110a',railInner:'#4a2616',
@@ -132,9 +167,79 @@ const boardSchemes={
    pocket:'#120905',pocketRing:'#c99052',credit:'rgba(245,211,159,.82)',
    discStroke:'rgba(24,12,7,.82)',discHighlight:'rgba(255,235,200,.20)',discShade:'rgba(0,0,0,.26)',
    drag:'rgba(245,211,159,.55)'
+ },
+ german:{
+   pageBg:'radial-gradient(circle at top,#2b0000,#140000 72%)',
+   headerBg:'#210000e0',panelBg:'#240707e8',
+   shellBg:'linear-gradient(145deg,#ff2b2b,#ffffff 50%,#000000)',
+   shellShadow:'0 24px 60px rgba(0,0,0,.55),inset 0 0 0 5px #000000,inset 0 0 0 12px #ffffff,inset 0 0 24px rgba(255,0,0,.45)',
+   canvasShadow:'inset 0 0 0 8px #000000',
+   uiText:'#fff3f3',uiMuted:'#ffd0d0',controlBg:'#4b0808',controlBorder:'rgba(255,255,255,.28)',controlHover:'#6b1010',statusBg:'rgba(0,0,0,.28)',logBg:'#160202',
+   canvas:'#ff2020',simpleFrame:'#ff2020',simpleFrameEdge:'#8a0000',simpleFrameInner:'#ffffff',
+   frame0:'#ff3030',frame1:'#e60000',frame2:'#9d0000',
+   frameOuter:'#000000',frameInner:'#ffffff',
+   railOuter:'#000000',rail:'#ff1f1f',railInner:'#ffffff',
+   board:'#ff2020',
+   guide:'rgba(255,255,255,.55)',guideStrong:'rgba(255,255,255,.82)',aimGuide:'rgba(255,255,255,.50)',
+   centerFill:'#ffffff',centerStroke:'#000000',
+   symbol:'#000000',symbolCutout:'#ffffff',symbolRotation:Math.PI/4, // rotate the complete grouped center mark by 45°
+   pocket:'#000000',pocketRing:'#ffffff',credit:'rgba(0,0,0,.78)',
+   discStroke:'rgba(0,0,0,.85)',discHighlight:'rgba(255,255,255,.30)',discShade:'rgba(0,0,0,.24)',
+   drag:'rgba(0,0,0,.70)'
  }
 };
 function scheme(){return boardSchemes[boardScheme]||boardSchemes.wood;}
+
+function applyPageTheme(){
+ const pal=scheme();
+ document.body.style.background=pal.pageBg;
+ document.body.style.color=pal.uiText;
+ if(headerEl){
+   headerEl.style.background=pal.headerBg;
+   headerEl.style.borderBottomColor=pal.controlBorder;
+   headerEl.style.color=pal.uiText;
+ }
+ if(sidePanel){
+   sidePanel.style.background=pal.panelBg;
+   sidePanel.style.borderColor=pal.controlBorder;
+   sidePanel.style.color=pal.uiText;
+ }
+ if(boardShell){
+   boardShell.style.background=boardScheme==='finnish'?'#eaf8ff':(pal.simpleFrame||pal.canvas);
+   boardShell.style.boxShadow='0 18px 45px rgba(0,0,0,.35)';
+   boardShell.style.padding='8px';
+ }
+ canvas.style.background=pal.canvas;
+ canvas.style.boxShadow=pal.canvasShadow;
+
+ const root=document.documentElement;
+ root.style.setProperty('--ink',pal.uiText);
+ root.style.setProperty('--muted',pal.uiMuted);
+
+ document.querySelectorAll('button,select,label.toggle').forEach(el=>{
+   el.style.background=pal.controlBg;
+   el.style.color=pal.uiText;
+   el.style.borderColor=pal.controlBorder;
+ });
+ document.querySelectorAll('.status,.score div').forEach(el=>{
+   el.style.background=pal.statusBg;
+   el.style.borderColor=pal.controlBorder;
+   el.style.color=pal.uiText;
+ });
+ document.querySelectorAll('.log').forEach(el=>{
+   el.style.background=pal.logBg;
+   el.style.color=pal.uiText;
+ });
+ document.querySelectorAll('details').forEach(el=>{
+   el.style.borderTopColor=pal.controlBorder;
+ });
+ document.querySelectorAll('.small,.tag,.botGrid label').forEach(el=>{
+   el.style.color=pal.uiMuted;
+ });
+ const win=document.getElementById('winText');
+ if(win) win.style.color=boardScheme==='finnish'?'#0d5f96':'#ffe69a';
+}
+
 const playerDefs={
   red:{side:'top',shoot:'bottom'},
   blue:{side:'bottom',shoot:'top'},
@@ -144,46 +249,73 @@ const playerDefs={
 const playerOrders={2:['red','blue'],3:['red','blue','green'],4:['red','blue','green','yellow']};
 const T={
   en:{
-    tagline:'Finnish board billiards — local 2–4 player browser version', turn:'Turn', help:'Place the striker on your shooting line, pull back, release.', wait:'Wait for all discs to stop.', over:'Game over. Start a new game to play again.', newGame:'New game', undo:'Undo shot', apply:'Apply', aim:'Aim helper', sound:'Sound', off:'off', on:'on', controls:'Controls: drag the large striker (“plutsi/limppu”). The arrow shows shot direction and power. Use R to cancel a loaded shot before shooting.', rules:'Implemented rules', log:'Shot log', players:['Red','Blue','Green','Yellow'], rowSetup:'Finnish row setup', centerSetup:'Center-circle Couronne setup', newLog:'New game', own:'own', opponents:'opponent', nothing:'nothing potted', strikerFoul:'striker foul', returned:'one own disc returned', wins:'wins!', draw:'Draw', shot:'shot', potted:'potted', foulMix:'potted own and opponent discs', multiplayerNote:'For 3–4 players, each color has 8 discs and shoots from the side opposite its starting row.', human:'Human', computer:'Computer', easyAI:'Easy AI', intermediateAI:'Intermediate AI', hardAI:'Hard AI', impossibleAI:'Impossible AI', inactive:'Inactive', botPlayers:'Computer players', botThinking:'Computer is aiming…', botShot:'Computer shot', credit:'Game by Trassel Vardias', woodScheme:'Classic wood', finnishScheme:'Finnish blue & white', walnutScheme:'Dark walnut'
+    tagline:'Finnish board billiards — local 2–4 player browser version', turn:'Turn', help:'Place the striker on your shooting line, pull back, release.', wait:'Wait for all discs to stop.', over:'Game over. Start a new game to play again.', newGame:'New game', undo:'Undo shot', apply:'Apply', aim:'Aim helper', sound:'Sound', music:'Theme music', speed:'Speed', normalSpeed:'normal', doubleSpeed:'2x', quadrupleSpeed:'4x', off:'off', on:'on', controls:'Controls: drag the large striker (“plutsi/limppu”). The arrow shows shot direction and power. Use R to cancel a loaded shot before shooting.', rules:'Rules', log:'Shot log', players:['Red','Blue','Green','Yellow'], rowSetup:'Finnish row setup', centerSetup:'Center-circle Couronne setup', newLog:'New game', own:'own', opponents:'opponent', nothing:'nothing potted', strikerFoul:'striker foul', returned:'one own disc returned', wins:'wins!', draw:'Draw', shot:'shot', potted:'potted', foulMix:'potted own and opponent discs', multiplayerNote:'For 3–4 players, each color has 8 discs and shoots from the side opposite its starting row.', human:'Human', computer:'Computer', easyAI:'Easy AI', intermediateAI:'Intermediate AI', hardAI:'Hard AI', impossibleAI:'Impossible AI', inactive:'Inactive', botPlayers:'Computer players', botThinking:'Computer is aiming…', botShot:'Computer shot', credit:'Game by Trassel Vardias', woodScheme:'Classic wood', finnishScheme:'Finnish blue & white', walnutScheme:'Dark walnut', germanScheme:'German red'
   },
   fi:{
-    tagline:'Suomalainen lautabiljardi — paikallinen 2–4 pelaajan selainversio', turn:'Vuoro', help:'Aseta plutsi lyöntilinjalle, vedä taakse ja päästä irti.', wait:'Odota, että kaikki nappulat pysähtyvät.', over:'Peli päättyi. Aloita uusi peli.', newGame:'Uusi peli', undo:'Kumoa lyönti', apply:'Käytä', aim:'Tähtäysapu', sound:'Äänet', off:'pois', on:'päällä', controls:'Ohjaus: vedä suurta lyöntinappulaa (“plutsi/limppu”). Nuoli näyttää suunnan ja voiman. R-näppäin peruu viritetyn lyönnin ennen laukaisua.', rules:'Toteutetut säännöt', log:'Lyöntiloki', players:['Punainen','Sininen','Vihreä','Keltainen'], rowSetup:'Suomalainen riviasettelu', centerSetup:'Keskirinki / Couronne -asettelu', newLog:'Uusi peli', own:'omaa', opponents:'vastustajan', nothing:'ei pussiin menneitä', strikerFoul:'plutsi meni pussiin', returned:'yksi oma nappula palautettiin', wins:'voittaa!', draw:'Tasapeli', shot:'löi', potted:'pussiin', foulMix:'oma ja vastustajan nappula meni pussiin', multiplayerNote:'3–4 pelaajan pelissä jokaisella värillä on 8 nappulaa ja lyönti tapahtuu oman aloitusrivin vastakkaiselta sivulta.', human:'Ihminen', computer:'Tietokone', easyAI:'Helppo AI', intermediateAI:'Keskitaso AI', hardAI:'Vaikea AI', impossibleAI:'Mahdoton AI', inactive:'Ei käytössä', botPlayers:'Tietokonepelaajat', botThinking:'Tietokone tähtää…', botShot:'Tietokoneen lyönti', credit:'Peli: Trassel Vardias', woodScheme:'Perinteinen puu', finnishScheme:'Suomi sinivalkoinen', walnutScheme:'Tumma pähkinä'
+    tagline:'Suomalainen lautabiljardi — paikallinen 2–4 pelaajan selainversio', turn:'Vuoro', help:'Aseta plutsi lyöntilinjalle, vedä taakse ja päästä irti.', wait:'Odota, että kaikki nappulat pysähtyvät.', over:'Peli päättyi. Aloita uusi peli.', newGame:'Uusi peli', undo:'Kumoa lyönti', apply:'Käytä', aim:'Tähtäysapu', sound:'Äänet', music:'Tunnusmusiikki', speed:'Nopeus', normalSpeed:'normaali', doubleSpeed:'2x', quadrupleSpeed:'4x', off:'pois', on:'päällä', controls:'Ohjaus: vedä suurta lyöntinappulaa (“plutsi/limppu”). Nuoli näyttää suunnan ja voiman. R-näppäin peruu viritetyn lyönnin ennen laukaisua.', rules:'Säännöt', log:'Lyöntiloki', players:['Punainen','Sininen','Vihreä','Keltainen'], rowSetup:'Suomalainen riviasettelu', centerSetup:'Keskirinki / Couronne -asettelu', newLog:'Uusi peli', own:'omaa', opponents:'vastustajan', nothing:'ei pussiin menneitä', strikerFoul:'plutsi meni pussiin', returned:'yksi oma nappula palautettiin', wins:'voittaa!', draw:'Tasapeli', shot:'löi', potted:'pussiin', foulMix:'oma ja vastustajan nappula meni pussiin', multiplayerNote:'3–4 pelaajan pelissä jokaisella värillä on 8 nappulaa ja lyönti tapahtuu oman aloitusrivin vastakkaiselta sivulta.', human:'Ihminen', computer:'Tietokone', easyAI:'Helppo AI', intermediateAI:'Keskitaso AI', hardAI:'Vaikea AI', impossibleAI:'Mahdoton AI', inactive:'Ei käytössä', botPlayers:'Tietokonepelaajat', botThinking:'Tietokone tähtää…', botShot:'Tietokoneen lyönti', credit:'Peli: Trassel Vardias', woodScheme:'Perinteinen puu', finnishScheme:'Suomi sinivalkoinen', walnutScheme:'Tumma pähkinä', germanScheme:'Saksan punainen'
   },
   sv:{
-    tagline:'Finsk brädbiljard — lokal webbläsarversion för 2–4 spelare', turn:'Tur', help:'Placera köbrickan på din slaglinje, dra bakåt och släpp.', wait:'Vänta tills alla brickor har stannat.', over:'Spelet är slut. Starta ett nytt spel.', newGame:'Nytt spel', undo:'Ångra slag', apply:'Använd', aim:'Sikthjälp', sound:'Ljud', off:'av', on:'på', controls:'Kontroller: dra den stora köbrickan (“plutsi/limppu”). Pilen visar riktning och kraft. Tryck R för att avbryta ett laddat slag före skottet.', rules:'Implementerade regler', log:'Slaglogg', players:['Röd','Blå','Grön','Gul'], rowSetup:'Finsk raduppställning', centerSetup:'Centercirkel / Couronne', newLog:'Nytt spel', own:'egna', opponents:'motståndares', nothing:'inget i hål', strikerFoul:'köbrickan i hål', returned:'en egen bricka återställdes', wins:'vinner!', draw:'Oavgjort', shot:'slag', potted:'i hål', foulMix:'egna och motståndares brickor i hål', multiplayerNote:'I 3–4-spelarläget har varje färg 8 brickor och slår från sidan mittemot sin startrad.', human:'Människa', computer:'Dator', easyAI:'Lätt AI', intermediateAI:'Mellan AI', hardAI:'Svår AI', impossibleAI:'Omöjlig AI', inactive:'Inaktiv', botPlayers:'Datorspelare', botThinking:'Datorn siktar…', botShot:'Datorslag', credit:'Spel av Trassel Vardias', woodScheme:'Klassiskt trä', finnishScheme:'Finländsk blåvit', walnutScheme:'Mörk valnöt'
+    tagline:'Finsk brädbiljard — lokal webbläsarversion för 2–4 spelare', turn:'Tur', help:'Placera köbrickan på din slaglinje, dra bakåt och släpp.', wait:'Vänta tills alla brickor har stannat.', over:'Spelet är slut. Starta ett nytt spel.', newGame:'Nytt spel', undo:'Ångra slag', apply:'Använd', aim:'Sikthjälp', sound:'Ljud', music:'Temamusik', speed:'Hastighet', normalSpeed:'normal', doubleSpeed:'2x', quadrupleSpeed:'4x', off:'av', on:'på', controls:'Kontroller: dra den stora köbrickan (“plutsi/limppu”). Pilen visar riktning och kraft. Tryck R för att avbryta ett laddat slag före skottet.', rules:'Regler', log:'Slaglogg', players:['Röd','Blå','Grön','Gul'], rowSetup:'Finsk raduppställning', centerSetup:'Centercirkel / Couronne', newLog:'Nytt spel', own:'egna', opponents:'motståndares', nothing:'inget i hål', strikerFoul:'köbrickan i hål', returned:'en egen bricka återställdes', wins:'vinner!', draw:'Oavgjort', shot:'slag', potted:'i hål', foulMix:'egna och motståndares brickor i hål', multiplayerNote:'I 3–4-spelarläget har varje färg 8 brickor och slår från sidan mittemot sin startrad.', human:'Människa', computer:'Dator', easyAI:'Lätt AI', intermediateAI:'Mellan AI', hardAI:'Svår AI', impossibleAI:'Omöjlig AI', inactive:'Inaktiv', botPlayers:'Datorspelare', botThinking:'Datorn siktar…', botShot:'Datorslag', credit:'Spel av Trassel Vardias', woodScheme:'Klassiskt trä', finnishScheme:'Finländsk blåvit', walnutScheme:'Mörk valnöt', germanScheme:'Tysk röd'
   }
 };
-let lang='en', variant='rows', boardScheme='wood', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=true;
+let lang='en', variant='rows', boardScheme='wood', playerCount=2, players=playerOrders[2], current='red', bodies=[], striker=null, dragging=false, dragFrom=null, dragNow=null, moving=false, won=false, aimHelper=false, sound=true, themeMusic=false, gameSpeed=1;
 let aiMode={red:'human',blue:'easy',green:'human',yellow:'human'}, botPending=false;
-let centerSymbol='joulutorttu', trasselTapCount=0, trasselTapTimer=null, spiralSpin=false, spiralAngle=0, boardRainbow=false, centerTapCount=0, centerTapTimer=null;
-let lastSnapshot=null, shotEvents=null, lastFrameTime=null, physicsAccumulator=0, aiActing=null;
+let centerSymbol='joulutorttu', trasselTapCount=0, trasselTapTimer=null, spiralSpin=false, spiralAngle=0, boardRainbow=false, centerTapCount=0, centerTapTimer=null, germanUnlocked=false;
+let lastSnapshot=null, shotEvents=null, lastFrameTime=null, physicsAccumulator=0, aiActing=null, fireworks=[], fireworkQueue=[], fireworksStarted=false;
 const turnText=document.getElementById('turnText'), help=document.getElementById('help'), scoreBox=document.getElementById('scoreBox'), logEl=document.getElementById('log'), winText=document.getElementById('winText');
 function tr(){return T[lang]||T.en} function capColor(c){return tr().players[['red','blue','green','yellow'].indexOf(c)]||c}
-function cloneState(){return JSON.stringify({variant,boardScheme,playerCount,players,current,bodies,striker,won,lang,aiMode,boardRainbow,centerSymbol,spiralSpin,spiralAngle});}
+function cloneState(){return JSON.stringify({variant,boardScheme,playerCount,players,current,bodies,striker,won,lang,aiMode,boardRainbow,centerSymbol,spiralSpin,spiralAngle,germanUnlocked,gameSpeed});}
 function restoreState(s){
  if(!s)return;
- lastFrameTime=null; physicsAccumulator=0; aiActing=null; dragging=false; dragFrom=null; dragNow=null;
+ lastFrameTime=null; physicsAccumulator=0; aiActing=null; fireworks=[]; fireworkQueue=[]; fireworksStarted=false; dragging=false; dragFrom=null; dragNow=null;
  const o=JSON.parse(s);
  variant=o.variant; boardScheme=o.boardScheme||boardScheme; playerCount=o.playerCount||2; players=o.players||playerOrders[playerCount];
  current=o.current; bodies=o.bodies; striker=o.striker; won=o.won; lang=o.lang||lang;
- boardRainbow=!!o.boardRainbow; centerSymbol=o.centerSymbol||centerSymbol; spiralSpin=!!o.spiralSpin; spiralAngle=o.spiralAngle||0;
+ boardRainbow=!!o.boardRainbow; centerSymbol=o.centerSymbol||centerSymbol; spiralSpin=!!o.spiralSpin; spiralAngle=o.spiralAngle||0; germanUnlocked=!!o.germanUnlocked; gameSpeed=[1,2,4].includes(o.gameSpeed)?o.gameSpeed:1;
  if(o.aiMode) aiMode=o.aiMode;
  else if(o.botMode) aiMode={red:o.botMode.red?'easy':'human',blue:o.botMode.blue?'easy':'human',green:o.botMode.green?'easy':'human',yellow:o.botMode.yellow?'easy':'human'};
  botPending=false;
  syncControls(); updateText(); updateUI();
 }
 function log(msg){const p=document.createElement('p'); p.textContent=msg; logEl.prepend(p);}
-let audioCtx=null, audioUnlocked=false;
+let audioCtx=null, audioUnlocked=false, masterGain=null, fxGain=null, musicGain=null, musicFilter=null, limiter=null;
 function getAudioCtx(){
  if(!audioCtx){
    const AC=window.AudioContext||window.webkitAudioContext;
    if(!AC) return null;
    audioCtx=new AC();
+
+   masterGain=audioCtx.createGain();
+   masterGain.gain.value=1.35;
+
+   limiter=audioCtx.createDynamicsCompressor();
+   limiter.threshold.value=-7;
+   limiter.knee.value=18;
+   limiter.ratio.value=7;
+   limiter.attack.value=.004;
+   limiter.release.value=.18;
+
+   fxGain=audioCtx.createGain();
+   fxGain.gain.value=2.25;
+
+   musicGain=audioCtx.createGain();
+   musicGain.gain.value=1.15;
+
+   musicFilter=audioCtx.createBiquadFilter();
+   musicFilter.type='lowpass';
+   musicFilter.frequency.value=4200;
+   musicFilter.Q.value=.55;
+
+   fxGain.connect(limiter);
+   musicGain.connect(musicFilter);
+   musicFilter.connect(limiter);
+   limiter.connect(masterGain);
+   masterGain.connect(audioCtx.destination);
  }
  return audioCtx;
 }
 function unlockAudio(){
- if(!sound) return;
+ if(!sound && !themeMusic) return;
  const ac=getAudioCtx();
  if(!ac) return;
  try{
@@ -191,22 +323,189 @@ function unlockAudio(){
    audioUnlocked=true;
  }catch(e){}
 }
-function beep(freq=360,dur=.055,vol=.12){
+let lastBeepAt=0;
+function beep(freq=360,dur=.055,vol=.46){
  if(!sound) return;
  try{
    const ac=getAudioCtx();
    if(!ac) return;
    if(ac.state==='suspended') ac.resume();
-   const o=ac.createOscillator(), g=ac.createGain();
+
+   // Prevent rapid collision spam from becoming a broken/rattling buzz.
+   const now=ac.currentTime;
+   if(now-lastBeepAt<.012) return;
+   lastBeepAt=now;
+
+   const o=ac.createOscillator(), g=ac.createGain(), f=ac.createBiquadFilter();
    o.type='sine';
-   o.frequency.setValueAtTime(freq,ac.currentTime);
-   g.gain.setValueAtTime(Math.max(.001,vol),ac.currentTime);
-   g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime+dur);
-   o.connect(g);
-   g.connect(ac.destination);
-   o.start(ac.currentTime);
-   o.stop(ac.currentTime+dur+.01);
+   f.type='lowpass';
+   f.frequency.setValueAtTime(Math.min(3200,Math.max(500,freq*5)),now);
+   o.frequency.setValueAtTime(freq,now);
+
+   const v=Math.min(.95,Math.max(.001,vol));
+   g.gain.setValueAtTime(.0001,now);
+   g.gain.linearRampToValueAtTime(v,now+.006);
+   g.gain.exponentialRampToValueAtTime(.0001, now+dur);
+
+   o.connect(f);
+   f.connect(g);
+   g.connect(fxGain||ac.destination);
+   o.start(now);
+   o.stop(now+dur+.02);
  }catch(e){}
+}
+
+const THEME_MIDI_B64='TVRoZAAAAAYAAQAEAYBNVHJrAAAhUQD/WAQEAhgIAP9RAwO4vgD/AxVFbGVjLiBQaWFubyAoQ2xhc3NpYykAwAQAkDwyAJA8MgCQMDIAkCwyh0CALAAAgDAAAIA8AACAPACBQJA9MgCQPTIAkDEyAJAsMoIggCwAAIAxAACAPQAAgD0AYJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQMzKEQIA8AACAPwAAgD8AgUCAMwAAgDAAAJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBIMgCQSDIAkD8yAJA4MgCQPDKEQIA/AACASAAAgEgAgUCAPAAAgDgAAJBIMgCQSDIAkD8yAJA4MgCQPDKHQIA8AACAOAAAgD8AAIBIAACASACBQJBGMgCQPTIAkEYyAJA3MgCQOjKCIIA6AACANwAAgEYAAIA9AACARgBgkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwCSAJBDMgCQQzIAkD8yAJAzMgCQOjKEQIA/AACAQwAAgEMAgUCAOgAAgDMAAJBEMgCQRDIAkD8yAJA8MgCQMzKEQIA/AACARAAAgEQAgUCAMwAAgDwAAJBGMgCQPTIAkEYyAJA3MgCQOjKEQIBGAACAPQAAgEYAgUCAOgAAgDcAkgCQSDIAkEgyAJA/MgCQODIAkDwyh0CAPAAAgDgAAIA/AACASAAAgEgAgUCQRjIAkD0yAJBGMgCQNzIAkDoygiCAOgAAgDcAAIBGAACAPQAAgEYAYJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAkgCQPDIAkDwyAJAsMgCQMDKHQIAwAACALAAAgDwAAIA8AIFAkD0yAJA9MgCQLDIAkDEygiCAMQAAgCwAAIA9AACAPQBgkD8yAJA/MgCQPDIAkDAyAJA4MoRAgDwAAIA/AACAPwCBQIA4AACAMAAAkD8yAJA/MgCQPDIAkDAyAJAzMoRAgDwAAIA/AACAPwCBQIAzAACAMAAAkD8yAJA8MgCQPzIAkDAyAJA4MoRAgD8AAIA8AACAPwCBQIA4AACAMAAAkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwAAkEQyAJA8MgCQRDIAkDMyAJA4MoRAgEQAAIA8AACARACBQIA4AACAMwAAkEgyAJBIMgCQPzIAkDgyAJA8MoRAgD8AAIBIAACASACBQIA8AACAOAAAkEgyAJBIMgCQPzIAkDgyAJA8ModAgDwAAIA4AACAPwAAgEgAAIBIAIFAkEYyAJA9MgCQRjIAkDcyAJA6MoIggDoAAIA3AACARgAAgD0AAIBGAGCQRDIAkEQyAJA8MgCQMzIAkDgyhECAPAAAgEQAAIBEAIFAgDgAAIAzAJIAkEMyAJBDMgCQPzIAkDMyAJA6MoRAgD8AAIBDAACAQwCBQIA6AACAMwAAkEQyAJA/MgCQRDIAkDMyAJA8MoRAgEQAAIA/AACARACBQIA8AACAMwAAkEYyAJA9MgCQRjIAkDcyAJA6MoRAgDoAAIA3AACARgAAgD0AAIBGAJNAkEgyAJBIMgCQPzIAkDgyAJA8ModAgDwAAIA4AACAPwAAgEgAAIBIAIFAkEYyAJA9MgCQRjIAkDcyAJA6MoIggDoAAIA3AACARgAAgD0AAIBGAGCQRDIAkEQyAJA8MgCQMzIAkDgyhECAPAAAgEQAAIBEAIFAgDgAAIAzAJIAkD8yAJA/MgCQPDIAkDAyAJA4ModAgDgAAIAwAACAPAAAgD8AAIA/AIFAkEQyAJBEMgCQPDIAkDMyAJA4MoIggDgAAIAzAACAPAAAgEQAAIBEAGCQQzIAkEMyAJA6MgCQMzIAkDcyhECAOgAAgEMAAIBDAIFAgDcAAIAzAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQQzIAkEMyAJA6MgCQMzIAkDcyhECAOgAAgEMAAIBDAIFAgDcAAIAzAACQQTIAkEEyAJA9MgCQMTIAkDgyhECAPQAAgEEAAIBBAIFAgDgAAIAxAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQRDIAkDwyAJBEMgCQMzIAkDgyhECARAAAgDwAAIBEAIFAgDgAAIAzAJIAkEMyAJBDMgCQPzIAkDMyAJA3ModAgDcAAIAzAACAPwAAgEMAAIBDAIFAkEQyAJA8MgCQRDIAkDMyAJA4MoIggDgAAIAzAACARAAAgDwAAIBEAGCQRjIAkEYyAJA9MgCQNzIAkDoyhECAPQAAgEYAAIBGAIFAgDoAAIA3AACQRjIAkEYyAJA9MgCQNzIAkDoyhECAPQAAgEYAAIBGAIFAgDoAAIA3AACQRjIAkD0yAJBGMgCQNzIAkDoyhECARgAAgD0AAIBGAIFAgDoAAIA3AACQRjIAkEYyAJBDMgCQNzIAkD0yhECAQwAAgEYAAIBGAIFAgD0AAIA3AACQSzIAkEsyAJBEMgCQPDIAkD8yhECARAAAgEsAAIBLAIFAgD8AAIA8AACQSTIAkEkyAJBGMgCQNzIAkD0yhECARgAAgEkAAIBJAIFAgD0AAIA3AACQSDIAkEgyAJBEMgCQODIAkDwyhECARAAAgEgAAIBIAIFAgDwAAIA4AJIAkDwyAJA8MgCQLDIAkDAyh0CAMAAAgCwAAIA8AACAPACBQJA9MgCQPTIAkCwyAJAxMoIggDEAAIAsAACAPQAAgD0AYJA/MgCQPzIAkDwyAJAwMgCQMzKEQIA8AACAPwAAgD8AgUCAMwAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQODKEQIA8AACAPwAAgD8AgUCAOAAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQODKEQIA8AACAPwAAgD8AgUCAOAAAgDAAAJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAAJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAAJBIMgCQPzIAkEgyAJA4MgCQPDKEQIBIAACAPwAAgEgAgUCAPAAAgDgAAJBIMgCQSDIAkD8yAJA4MgCQPDKHQIA8AACAOAAAgD8AAIBIAACASACBQJBGMgCQPTIAkEYyAJA3MgCQOjKCIIA6AACANwAAgEYAAIA9AACARgBgkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwCSAJBDMgCQQzIAkD8yAJAzMgCQNzKEQIA/AACAQwAAgEMAgUCANwAAgDMAAJBEMgCQPzIAkEQyAJAwMgCQODKEQIBEAACAPwAAgEQAgUCAOAAAgDAAAJBGMgCQRjIAkD0yAJA3MgCQOjKEQIA9AACARgAAgEYAgUCAOgAAgDcAkgCQSDIAkEgyAJA/MgCQODIAkDwyh0CAPAAAgDgAAIA/AACASAAAgEgAgUCQRjIAkD0yAJBGMgCQNzIAkDoygiCAOgAAgDcAAIBGAACAPQAAgEYAYJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAhgCQPDIAkDwyh0CAPAAAgDwAgUCQPTIAkD0ygiCAPQAAgD0AYJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQMzKEQIA8AACAPwAAgD8AgUCAMwAAgDAAAJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBIMgCQSDIAkD8yAJA4MgCQPDKEQIA/AACASAAAgEgAgUCAPAAAgDgAAJBIMgCQSDIAkD8yAJA4MgCQPDKHQIA8AACAOAAAgD8AAIBIAACASACBQJBGMgCQPTIAkEYyAJA3MgCQOjKCIIA6AACANwAAgEYAAIA9AACARgBgkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwCSAJBDMgCQQzIAkD8yAJAzMgCQOjKEQIA/AACAQwAAgEMAgUCAOgAAgDMAAJBEMgCQRDIAkD8yAJA8MgCQMzKEQIA/AACARAAAgEQAgUCAMwAAgDwAAJBGMgCQPTIAkEYyAJA3MgCQOjKEQIBGAACAPQAAgEYAgUCAOgAAgDcAkgCQSDIAkEgyAJA/MgCQODIAkDwyh0CAPAAAgDgAAIA/AACASAAAgEgAgUCQRjIAkD0yAJBGMgCQNzIAkDoygiCAOgAAgDcAAIBGAACAPQAAgEYAYJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAkgCQPDIAkDwyAJAsMgCQMDKHQIAwAACALAAAgDwAAIA8AIFAkD0yAJA9MgCQLDIAkDEygiCAMQAAgCwAAIA9AACAPQBgkD8yAJA/MgCQPDIAkDAyAJA4MoRAgDwAAIA/AACAPwCBQIA4AACAMAAAkD8yAJA/MgCQPDIAkDAyAJAzMoRAgDwAAIA/AACAPwCBQIAzAACAMAAAkD8yAJA8MgCQPzIAkDAyAJA4MoRAgD8AAIA8AACAPwCBQIA4AACAMAAAkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwAAkEQyAJA8MgCQRDIAkDMyAJA4MoRAgEQAAIA8AACARACBQIA4AACAMwAAkEgyAJBIMgCQPzIAkDgyAJA8MoRAgD8AAIBIAACASACBQIA8AACAOAAAkEgyAJBIMgCQPzIAkDgyAJA8ModAgDwAAIA4AACAPwAAgEgAAIBIAIFAkEYyAJA9MgCQRjIAkDcyAJA6MoIggDoAAIA3AACARgAAgD0AAIBGAGCQRDIAkEQyAJA8MgCQMzIAkDgyhECAPAAAgEQAAIBEAIFAgDgAAIAzAJIAkEMyAJBDMgCQPzIAkDMyAJA6MoRAgD8AAIBDAACAQwCBQIA6AACAMwAAkEQyAJA/MgCQRDIAkDMyAJA8MoRAgEQAAIA/AACARACBQIA8AACAMwAAkEYyAJA9MgCQRjIAkDcyAJA6MoRAgDoAAIA3AACARgAAgD0AAIBGAJNAkEgyAJBIMgCQPzIAkDgyAJA8ModAgDwAAIA4AACAPwAAgEgAAIBIAIFAkEYyAJA9MgCQRjIAkDcyAJA6MoIggDoAAIA3AACARgAAgD0AAIBGAGCQRDIAkEQyAJA8MgCQMzIAkDgyhECAPAAAgEQAAIBEAIFAgDgAAIAzAJIAkD8yAJA/MgCQPDIAkDAyAJA4ModAgDgAAIAwAACAPAAAgD8AAIA/AIFAkEQyAJBEMgCQPDIAkDMyAJA4MoIggDgAAIAzAACAPAAAgEQAAIBEAGCQQzIAkEMyAJA6MgCQMzIAkDcyhECAOgAAgEMAAIBDAIFAgDcAAIAzAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQQzIAkEMyAJA6MgCQMzIAkDcyhECAOgAAgEMAAIBDAIFAgDcAAIAzAACQQTIAkEEyAJA9MgCQMTIAkDgyhECAPQAAgEEAAIBBAIFAgDgAAIAxAACQQzIAkDoyAJBDMgCQMzIAkDcyhECAQwAAgDoAAIBDAIFAgDcAAIAzAACQRDIAkDwyAJBEMgCQMzIAkDgyhECARAAAgDwAAIBEAIFAgDgAAIAzAJIAkEMyAJBDMgCQPzIAkDMyAJA3ModAgDcAAIAzAACAPwAAgEMAAIBDAIFAkEQyAJA8MgCQRDIAkDMyAJA4MoIggDgAAIAzAACARAAAgDwAAIBEAGCQRjIAkEYyAJA9MgCQNzIAkDoyhECAPQAAgEYAAIBGAIFAgDoAAIA3AACQRjIAkEYyAJA9MgCQNzIAkDoyhECAPQAAgEYAAIBGAIFAgDoAAIA3AACQRjIAkD0yAJBGMgCQNzIAkDoyhECARgAAgD0AAIBGAIFAgDoAAIA3AACQRjIAkEYyAJBDMgCQNzIAkD0yhECAQwAAgEYAAIBGAIFAgD0AAIA3AACQSzIAkEsyAJBEMgCQPDIAkD8yhECARAAAgEsAAIBLAIFAgD8AAIA8AACQSTIAkEkyAJBGMgCQNzIAkD0yhECARgAAgEkAAIBJAIFAgD0AAIA3AACQSDIAkEgyAJBEMgCQODIAkDwyhECARAAAgEgAAIBIAIFAgDwAAIA4AJIAkDwyAJA8MgCQLDIAkDAyh0CAMAAAgCwAAIA8AACAPACBQJA9MgCQPTIAkCwyAJAxMoIggDEAAIAsAACAPQAAgD0AYJA/MgCQPzIAkDwyAJAwMgCQMzKEQIA8AACAPwAAgD8AgUCAMwAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQODKEQIA8AACAPwAAgD8AgUCAOAAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQODKEQIA8AACAPwAAgD8AgUCAOAAAgDAAAJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAAJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAAJBIMgCQPzIAkEgyAJA4MgCQPDKEQIBIAACAPwAAgEgAgUCAPAAAgDgAAJBIMgCQSDIAkD8yAJA4MgCQPDKHQIA8AACAOAAAgD8AAIBIAACASACBQJBGMgCQPTIAkEYyAJA3MgCQOjKCIIA6AACANwAAgEYAAIA9AACARgBgkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwCSAJBDMgCQQzIAkD8yAJAzMgCQNzKEQIA/AACAQwAAgEMAgUCANwAAgDMAAJBEMgCQPzIAkEQyAJAwMgCQODKEQIBEAACAPwAAgEQAgUCAOAAAgDAAAJBGMgCQRjIAkD0yAJA3MgCQOjKEQIA9AACARgAAgEYAgUCAOgAAgDcAkgCQSDIAkEgyAJA/MgCQODIAkDwyh0CAPAAAgDgAAIA/AACASAAAgEgAgUCQRjIAkD0yAJBGMgCQNzIAkDoygiCAOgAAgDcAAIBGAACAPQAAgEYAYJBEMgCQRDIAkDwyAJAzMgCQODKEQIA8AACARAAAgEQAgUCAOAAAgDMAhgCQPDIAkDwyh0CAPAAAgDwAgUCQPTIAkD0ygiCAPQAAgD0AYJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJA/MgCQPzIAkDwyAJAwMgCQMzKEQIA8AACAPwAAgD8AgUCAMwAAgDAAAJA/MgCQPDIAkD8yAJAwMgCQODKEQIA/AACAPAAAgD8AgUCAOAAAgDAAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBEMgCQPDIAkEQyAJAzMgCQODKEQIBEAACAPAAAgEQAgUCAOAAAgDMAAJBIMgCQSDIAkD8yAJA4MgCQPDKEQIA/AACASAAAgEgAgUCAPAAAgDgAAJBIMgCQSDIAkD8yAJA4MgCQPDKHQIA8AACAOAAAgD8AAIBIAACASACBQJBGMgCQPTIAkEYyAJA3MgCQOjKCIIA6AACANwAAgEYAAIA9AACARgBgkEQyAJBEMgCQPDIAkDMyAJA4MoRAgDwAAIBEAACARACBQIA4AACAMwCSAJBDMgCQQzIAkD8yAJAzMgCQOjKEQIA/AACAQwAAgEMAgUCAOgAAgDMAAJBEMgCQRDIAkD8yAJA8MgCQMzKEQIA/AACARAAAgEQAgUCAMwAAgDwAAJBGMgCQPTIAkEYyAJA3MgCQOjKEQIBGAACAPQAAgEYAgUCAOgAAgDcAkgCQSDIAkEgyAJA/MgCQODIAkDwyh0CAPAAAgDgA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';
+let themeNotes=null, themeTimer=null, themeNodes=[];
+function b64ToBytes(b64){
+ const bin=atob(b64), arr=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+ return arr;
+}
+function parseMidiTheme(){
+ if(themeNotes) return themeNotes;
+ const data=b64ToBytes(THEME_MIDI_B64);
+ let p=0;
+ function str(n){let s=''; for(let i=0;i<n;i++) s+=String.fromCharCode(data[p++]); return s;}
+ function u16(){const v=(data[p]<<8)|data[p+1]; p+=2; return v;}
+ function u32(){const v=((data[p]<<24)|(data[p+1]<<16)|(data[p+2]<<8)|data[p+3])>>>0; p+=4; return v;}
+ function varlenAt(pos){let v=0,b; do{b=data[pos++]; v=(v<<7)|(b&127);}while(b&128); return [v,pos];}
+ if(str(4)!=='MThd') throw new Error('Bad MIDI header');
+ const headerLen=u32(), format=u16(), ntrks=u16(), division=u16();
+ p += Math.max(0, headerLen-6);
+ const ticksPerBeat = division & 0x8000 ? 480 : division;
+ const raw=[];
+ let totalDur=0;
+ for(let tr=0; tr<ntrks; tr++){
+   if(str(4)!=='MTrk') break;
+   const len=u32(), end=p+len;
+   let sec=0, tempo=500000, running=0;
+   const active={};
+   while(p<end){
+     const dv=varlenAt(p); p=dv[1];
+     sec += dv[0] * (tempo/1000000) / ticksPerBeat;
+     let status=data[p++];
+     if(status<128){ p--; status=running; } else running=status;
+     if(status===0xff){
+       const type=data[p++]; const lv=varlenAt(p); const l=lv[0]; p=lv[1];
+       if(type===0x51 && l===3) tempo=(data[p]<<16)|(data[p+1]<<8)|data[p+2];
+       p += l;
+     } else if(status===0xf0 || status===0xf7){
+       const lv=varlenAt(p); p=lv[1]+lv[0];
+     } else {
+       const cmd=status&0xf0, ch=status&0x0f;
+       if(cmd===0xc0 || cmd===0xd0){ p+=1; }
+       else {
+         const a=data[p++], b=data[p++];
+         // Ignore MIDI percussion channel 10. It sounded like broken rattling with a tiny synth.
+         if(ch===9) continue;
+         if(cmd===0x90 && b>0){
+           const key=ch+':'+a;
+           (active[key]||(active[key]=[])).push({note:a,start:sec,vel:b,ch});
+         } else if(cmd===0x80 || (cmd===0x90 && b===0)){
+           const key=ch+':'+a, stack=active[key];
+           if(stack&&stack.length){
+             const n=stack.shift();
+             const dur=Math.max(.06,sec-n.start);
+             raw.push({note:n.note,start:n.start,dur,vel:n.vel,ch:n.ch});
+             totalDur=Math.max(totalDur,n.start+dur);
+           }
+         }
+       }
+     }
+   }
+   p=end;
+ }
+ raw.sort((a,b)=>a.start-b.start || b.vel-a.vel);
+
+ // Cap very dense moments to avoid scratchy/rattling overload.
+ const notes=[];
+ const buckets={};
+ for(const ev of raw){
+   const key=Math.floor(ev.start/.035);
+   buckets[key]=buckets[key]||0;
+   if(buckets[key] < 5){
+     buckets[key]++;
+     notes.push(ev);
+   }
+ }
+ themeNotes={notes,duration:Math.max(2,totalDur+.35)};
+ return themeNotes;
+}
+function stopThemeMusic(){
+ if(themeTimer){ clearTimeout(themeTimer); themeTimer=null; }
+ for(const n of themeNodes){ try{n.stop(0);}catch(e){} }
+ themeNodes=[];
+}
+function scheduleThemeOnce(){
+ if(!themeMusic) return;
+ const ac=getAudioCtx();
+ if(!ac) return;
+ try{ if(ac.state==='suspended') ac.resume(); }catch(e){}
+ const song=parseMidiTheme();
+ const startAt=ac.currentTime+.06;
+ themeNodes=[];
+
+ for(const ev of song.notes){
+   const freq=440*Math.pow(2,(ev.note-69)/12);
+   const t0=startAt+ev.start;
+   const dur=Math.max(.08,Math.min(ev.dur,2.8));
+   const t1=t0+dur;
+   const vel=ev.vel/127;
+   const vol=Math.min(.22,.055+vel*.135);
+
+   // Warmer channel-separated synth: melody centered, side voices panned and softer.
+   const o1=ac.createOscillator(), o2=ac.createOscillator(), g=ac.createGain(), f=ac.createBiquadFilter();
+   const pan=ac.createStereoPanner ? ac.createStereoPanner() : null;
+   const isBass=ev.note<48, isSide=ev.ch%3===1 || ev.ch%3===2;
+   o1.type=isBass?'triangle':(isSide?'sine':'sine');
+   o2.type=isBass?'sine':(isSide?'triangle':'triangle');
+   o1.frequency.setValueAtTime(freq,t0);
+   o2.frequency.setValueAtTime(isBass?freq*.5:freq*2,t0);
+
+   f.type='lowpass';
+   f.frequency.setValueAtTime(isSide?3600:Math.min(5600,Math.max(1000,freq*7)),t0);
+   f.Q.setValueAtTime(.42,t0);
+
+   const sideScale=isSide?.74:1.0;
+   const bassScale=isBass?.88:1.0;
+   const finalVol=vol*sideScale*bassScale;
+   g.gain.setValueAtTime(.0001,t0);
+   g.gain.linearRampToValueAtTime(finalVol,t0+.045);
+   g.gain.setValueAtTime(finalVol*.78,Math.max(t0+.05,t1-.12));
+   g.gain.exponentialRampToValueAtTime(.0001,t1);
+
+   const sub=ac.createGain();
+   sub.gain.value=isSide?.22:.30;
+
+   o1.connect(f);
+   o2.connect(sub);
+   sub.connect(f);
+   f.connect(g);
+   if(pan){
+     pan.pan.value=isSide?((ev.ch%2)?-.42:.42):0;
+     g.connect(pan);
+     pan.connect(musicGain||ac.destination);
+   } else {
+     g.connect(musicGain||ac.destination);
+   }
+
+   o1.start(t0); o2.start(t0);
+   o1.stop(t1+.05); o2.stop(t1+.05);
+   themeNodes.push(o1,o2);
+ }
+ themeTimer=setTimeout(()=>{ themeNodes=[]; if(themeMusic) scheduleThemeOnce(); }, song.duration*1000);
+}
+function startThemeMusic(){
+ if(!themeMusic) return;
+ unlockAudio();
+ stopThemeMusic();
+ scheduleThemeOnce();
+}
+function toggleThemeMusic(){
+ themeMusic=!themeMusic;
+ if(themeMusic) startThemeMusic(); else stopThemeMusic();
+ updateText();
 }
 function sidePositions(side){ const gap=discR*2+5; const start=W/2-gap*3.5; const fixed={top:minY+discR+5,bottom:maxY-discR-5,left:minX+discR+5,right:maxX-discR-5}[side]; return Array.from({length:8},(_,i)=> side==='top'||side==='bottom' ? {x:start+i*gap,y:fixed} : {x:fixed,y:start+i*gap}); }
 
@@ -235,36 +534,47 @@ function shootPoint(player){ const s=playerDefs[player].shoot; const pad=92; ret
 function shootingLine(player){ const s=playerDefs[player].shoot, pad=92; if(s==='top'||s==='bottom') return {axis:'y', value:s==='top'?minY+pad:maxY-pad, from:minX+90, to:maxX-90}; return {axis:'x', value:s==='left'?minX+pad:maxX-pad, from:minY+90, to:maxY-90}; }
 function placeFreeNear(x,y,r=discR){ const all=()=>bodies.concat(striker?[striker]:[]); for(let ring=0; ring<20; ring++){ const n=Math.max(8,ring*8); for(let a=0; a<n; a++){ let ang=a/n*Math.PI*2, nx=x+Math.cos(ang)*ring*(r*1.15), ny=y+Math.sin(ang)*ring*(r*1.15); if(nx<minX+r||nx>maxX-r||ny<minY+r||ny>maxY-r) continue; if(!all().some(b=>!b.pocketed && dist(nx,ny,b.x,b.y)<r+b.r+2)) return {x:nx,y:ny}; }} return {x:W/2,y:H/2};}
 function body(id,color,x,y,r=discR){return {id,color,x,y,vx:0,vy:0,r,m:r*r,pocketed:false,startX:x,startY:y};}
-function resetGame(){ lastFrameTime=null; physicsAccumulator=0; aiActing=null; dragging=false; dragFrom=null; dragNow=null; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
+function resetGame(){ lastFrameTime=null; physicsAccumulator=0; aiActing=null; fireworks=[]; fireworkQueue=[]; fireworksStarted=false; dragging=false; dragFrom=null; dragNow=null; players=playerOrders[playerCount]; current=players[0]; bodies=[]; won=false; botPending=false; logEl.innerHTML=''; winText.textContent=''; let id=0; if(variant==='rows'){ for(const pl of players){ for(const p of sidePositions(playerDefs[pl].side)) bodies.push(body(id++,pl,p.x,p.y)); } }
 else { const pts=centerPatternPositions(players.length); pts.forEach((p,i)=>bodies.push(body(id++,players[i%players.length],p.x,p.y))); }
  resetStriker(null,true); lastSnapshot=null; log(`${tr().newLog}: ${variant==='rows'?tr().rowSetup:tr().centerSetup}, ${playerCount} players.`); updateText(); updateUI();}
 function active(){return bodies.filter(b=>!b.pocketed).concat(striker && !striker.pocketed ? [striker] : []);} function dist(a,b,c,d){return Math.hypot(a-c,b-d);} function speed(b){return Math.hypot(b.vx,b.vy);}
 function isSafeStrikerPos(x,y){ if(y<minY+strikerR||y>maxY-strikerR||x<minX+strikerR||x>maxX-strikerR) return false; if(pockets.some(p=>dist(x,y,p.x,p.y)<pocketR+strikerR*.8)) return false; return !bodies.some(b=>!b.pocketed && dist(x,y,b.x,b.y)<b.r+strikerR+2); }
+function safeStrikerLinePos(line,key){
+ key=clamp(key,line.from,line.to);
+ const old=striker;
+ striker=null;
+ const candidates=[key];
+ for(let d=8; d<=220; d+=8){ candidates.push(key+d,key-d); }
+ for(const k0 of candidates){
+   const k=clamp(k0,line.from,line.to);
+   const p=pointForLine(line,k);
+   if(isSafeStrikerPos(p.x,p.y)){
+     striker=old;
+     return p;
+   }
+ }
+ striker=old;
+ return pointForLine(line,key);
+}
 function resetStriker(preferred,quiet=false){
  const sp=shootPoint(current);
- let x=sp.x,y=sp.y;
  const line=shootingLine(current);
- if(preferred!=null){
-   if(line.axis==='y') x=Math.max(minX+strikerR+45,Math.min(maxX-strikerR-45,preferred));
-   else y=Math.max(minY+strikerR+45,Math.min(maxY-strikerR-45,preferred));
- }
- // We are replacing the striker, so do not let placeFreeNear avoid the old striker.
- // This prevents New Game / Apply from alternating between two nearby start positions.
- striker=null;
- let pos=placeFreeNear(x,y,strikerR);
+ let key = preferred!=null ? preferred : (line.axis==='y'?sp.x:sp.y);
+ key=clamp(key,line.from,line.to);
+ const pos=safeStrikerLinePos(line,key);
  striker=body('s','striker',pos.x,pos.y,strikerR);
  striker.isStriker=true;
  if(!quiet) updateUI();
 }
 function nextPlayer(){ const i=players.indexOf(current); current=players[(i+1)%players.length]; }
-function updatePhysics(){ let arr=active(); for(const b of arr){ b.x+=b.vx; b.y+=b.vy; b.vx*=FRICTION; b.vy*=FRICTION; if(Math.abs(b.vx)<STOP_EPS) b.vx=0; if(Math.abs(b.vy)<STOP_EPS) b.vy=0; if(b.x-b.r<minX){b.x=minX+b.r;b.vx=Math.abs(b.vx)*.82;beep(160)} if(b.x+b.r>maxX){b.x=maxX-b.r;b.vx=-Math.abs(b.vx)*.82;beep(160)} if(b.y-b.r<minY){b.y=minY+b.r;b.vy=Math.abs(b.vy)*.82;beep(160)} if(b.y+b.r>maxY){b.y=maxY-b.r;b.vy=-Math.abs(b.vy)*.82;beep(160)} }
+function updatePhysics(){ let arr=active(); for(const b of arr){ b.x+=b.vx; b.y+=b.vy; b.vx*=FRICTION; b.vy*=FRICTION; if(Math.abs(b.vx)<STOP_EPS) b.vx=0; if(Math.abs(b.vy)<STOP_EPS) b.vy=0; if(b.x-b.r<minX){b.x=minX+b.r;b.vx=Math.abs(b.vx)*.82;beep(185,.06,.50)} if(b.x+b.r>maxX){b.x=maxX-b.r;b.vx=-Math.abs(b.vx)*.82;beep(185,.06,.50)} if(b.y-b.r<minY){b.y=minY+b.r;b.vy=Math.abs(b.vy)*.82;beep(185,.06,.50)} if(b.y+b.r>maxY){b.y=maxY-b.r;b.vy=-Math.abs(b.vy)*.82;beep(185,.06,.50)} }
  for(let k=0;k<2;k++) for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) collide(arr[i],arr[j]);
- for(const b of arr){ for(const p of pockets){ if(dist(b.x,b.y,p.x,p.y)<pocketR-b.r*.25){ b.pocketed=true; b.vx=b.vy=0; if(b.isStriker) shotEvents.strikerPocket=true; else shotEvents.potted.push(b); beep(680,.08); break; } } }
+ for(const b of arr){ for(const p of pockets){ if(dist(b.x,b.y,p.x,p.y)<pocketR-b.r*.25){ b.pocketed=true; b.vx=b.vy=0; if(b.isStriker) shotEvents.strikerPocket=true; else shotEvents.potted.push(b); beep(760,.13,.72); break; } } }
  moving=active().some(b=>speed(b)>MOVING_EPS); if(!moving && shotEvents) finishShot();}
-function collide(a,b){ const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy), min=a.r+b.r; if(d<=0||d>=min) return; const nx=dx/d, ny=dy/d, overlap=min-d; a.x-=nx*overlap*(b.m/(a.m+b.m)); a.y-=ny*overlap*(b.m/(a.m+b.m)); b.x+=nx*overlap*(a.m/(a.m+b.m)); b.y+=ny*overlap*(a.m/(a.m+b.m)); const rvx=b.vx-a.vx, rvy=b.vy-a.vy, vel=rvx*nx+rvy*ny; if(vel>0) return; const e=.93, j=-(1+e)*vel/(1/a.m+1/b.m), ix=j*nx, iy=j*ny; a.vx-=ix/a.m; a.vy-=iy/a.m; b.vx+=ix/b.m; b.vy+=iy/b.m; beep(240+Math.min(600,Math.abs(j)*.04),.025);}
+function collide(a,b){ const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy), min=a.r+b.r; if(d<=0||d>=min) return; const nx=dx/d, ny=dy/d, overlap=min-d; a.x-=nx*overlap*(b.m/(a.m+b.m)); a.y-=ny*overlap*(b.m/(a.m+b.m)); b.x+=nx*overlap*(a.m/(a.m+b.m)); b.y+=ny*overlap*(a.m/(a.m+b.m)); const rvx=b.vx-a.vx, rvy=b.vy-a.vy, vel=rvx*nx+rvy*ny; if(vel>0) return; const e=.93, j=-(1+e)*vel/(1/a.m+1/b.m), ix=j*nx, iy=j*ny; a.vx-=ix/a.m; a.vy-=iy/a.m; b.vx+=ix/b.m; b.vy+=iy/b.m; beep(260+Math.min(620,Math.abs(j)*.04),.035,.42);}
 function returnOne(player){ const candidates=bodies.filter(b=>b.color===player && b.pocketed); if(!candidates.length) return false; const b=candidates[candidates.length-1]; b.pocketed=false; const pos=variant==='rows'?placeFreeNear(b.startX,b.startY,b.r):placeFreeNear(W/2,H/2,b.r); b.x=pos.x; b.y=pos.y; b.vx=b.vy=0; return true;}
 function finishShot(){ const shooter=current; const own=shotEvents.potted.filter(b=>b.color===shooter).length; const opp=shotEvents.potted.length-own; const foul=shotEvents.strikerPocket || (own>0 && opp>0); let parts=[]; if(own||opp) parts.push(`${own} ${tr().own}, ${opp} ${tr().opponents} ${tr().potted}`); else parts.push(tr().nothing); if(shotEvents.strikerPocket) parts.push(tr().strikerFoul); if(own>0 && opp>0) parts.push(tr().foulMix); if(foul){ if(returnOne(shooter)) parts.push(tr().returned); nextPlayer(); } else if(opp>0 && own===0){ nextPlayer(); } else if(own>0){ /* keeps turn */ } else nextPlayer(); log(`${capColor(shooter)} ${tr().shot}: ${parts.join(' — ')}.`); shotEvents=null; botPending=false; const l=shootingLine(current); resetStriker(l.axis==='y' ? striker?.x : striker?.y); checkWin(); updateUI();}
-function checkWin(){ const winners=players.filter(pl=>!bodies.some(b=>b.color===pl&&!b.pocketed)); if(winners.length){ won=true; const text=winners.length>1?tr().draw:`${capColor(winners[0])} ${tr().wins}`; winText.textContent=text; help.textContent=tr().over; log(`${tr().over} ${text}`); }}
+function checkWin(){ const winners=players.filter(pl=>!bodies.some(b=>b.color===pl&&!b.pocketed)); if(winners.length){ won=true; const text=winners.length>1?tr().draw:`${capColor(winners[0])} ${tr().wins}`; winText.textContent=text; help.textContent=tr().over; log(`${tr().over} ${text}`); if(winners.length===1) triggerFireworks(winners[0]); }}
 function updateBotControls(){
  const box=document.getElementById('botControls');
  const order=['red','blue','green','yellow'];
@@ -281,11 +591,14 @@ function updateBotControls(){
  });
 }
 function isComputerTurn(){ return players.includes(current) && aiMode[current] && aiMode[current]!=='human'; }
-function updateText(){ document.documentElement.lang=lang; document.getElementById('tagline').textContent=tr().tagline; document.getElementById('newBtn').textContent=tr().newGame; document.getElementById('undoBtn').textContent=tr().undo; document.getElementById('applyVariant').textContent=tr().apply; document.getElementById('botBtn').textContent=`${tr().aim}: ${aimHelper?tr().on:tr().off}`; document.getElementById('soundBtn').textContent=`${tr().sound}: ${sound?tr().on:tr().off}`; document.getElementById('controls').innerHTML=tr().controls.replace('R','<kbd>R</kbd>'); document.getElementById('credit').textContent=tr().credit; document.getElementById('rulesSummary').textContent=tr().rules; updateBotControls(); document.getElementById('logSummary').textContent=tr().log; const v=document.getElementById('variant'); v.options[0].textContent=tr().rowSetup; v.options[1].textContent=tr().centerSetup; const sc=document.getElementById('scheme');
+function updateText(){ document.documentElement.lang=lang; document.getElementById('tagline').textContent=tr().tagline; document.getElementById('newBtn').textContent=tr().newGame; document.getElementById('undoBtn').textContent=tr().undo; document.getElementById('applyVariant').textContent=tr().apply; document.getElementById('botBtn').textContent=`${tr().aim}: ${aimHelper?tr().on:tr().off}`; document.getElementById('soundBtn').textContent=`${tr().sound}: ${sound?tr().on:tr().off}`;
+ document.getElementById('musicBtn').textContent=`${tr().music}: ${themeMusic?tr().on:tr().off}`;
+ document.getElementById('speedBtn').textContent=`${tr().speed}: ${gameSpeed===4?tr().quadrupleSpeed:(gameSpeed===2?tr().doubleSpeed:tr().normalSpeed)}`; document.getElementById('controls').innerHTML=tr().controls.replace('R','<kbd>R</kbd>'); document.getElementById('credit').textContent=tr().credit; document.getElementById('rulesSummary').textContent=tr().rules; updateBotControls(); document.getElementById('logSummary').textContent=tr().log; const v=document.getElementById('variant'); v.options[0].textContent=tr().rowSetup; v.options[1].textContent=tr().centerSetup; const sc=document.getElementById('scheme');
  if(sc){
    sc.options[0].textContent=tr().woodScheme;
    sc.options[1].textContent=tr().finnishScheme;
    sc.options[2].textContent=tr().walnutScheme;
+   if(sc.options[3]) sc.options[3].textContent=tr().germanScheme;
  }
  const ps=document.getElementById('players'); [...ps.options].forEach((o,i)=>o.textContent=`${i+2} ${i===0?'players':'players'}`); if(lang==='fi') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} pelaajaa`); if(lang==='sv') [...ps.options].forEach((o,i)=>o.textContent=`${i+2} spelare`); const rules=[`2–4 players; ${players.map(capColor).join(', ')}.`, `${tr().botPlayers}: ${players.filter(pl=>aiMode[pl]&&aiMode[pl]!=='human').map(pl=>`${capColor(pl)} (${aiLabel(pl)})`).join(', ')||'—'}.`, tr().multiplayerNote, 'Default Finnish setup: pieces begin in rows against board edges; center setup is available as a variant.', 'Pot your own discs in any corner pocket. Potting an own disc earns another shot.', 'Potting only opponent discs gives those players credit and passes the turn.', 'Potting the striker is a foul: one of your already potted discs is returned, and the turn passes.', 'If your shot pots both your own and opponent discs, the opponent keeps theirs, one of yours is returned, and the turn passes.'];
  if(lang==='fi') rules.splice(2,5,'Oletusasettelu: nappulat alkavat riveissä laudan reunoilla; keskirinki on vaihtoehtoinen asettelu.','Pussita omia nappuloita mihin tahansa kulmapussiin. Oma pussitus antaa uuden lyönnin.','Pelkkien vastustajan nappuloiden pussitus hyvitetään vastustajille ja vuoro vaihtuu.','Plutsin pussitus on virhe: yksi jo pussitettu oma nappula palautetaan ja vuoro vaihtuu.','Jos samassa lyönnissä menee oma ja vastustajan nappula, vastustaja saa pisteen, yksi oma palautetaan ja vuoro vaihtuu.');
@@ -374,6 +687,66 @@ function drawJoulutorttu(cx,cy,size){
 }
 
 
+
+
+function drawJoulutorttuRotatedAroundBoardCenter(cx,cy,size,angle){
+ const pal=scheme();
+ const board = pal.symbolCutout || pal.board;
+ const dark = pal.symbol;
+ const D = Math.min(size, 62);
+ const L = D;
+ const C = Math.round(D * 0.30);
+ const ca=Math.cos(angle||0), sa=Math.sin(angle||0);
+ function pt(x,y){
+   return {x:cx + x*ca - y*sa, y:cy + x*sa + y*ca};
+ }
+ function pathPoly(points,fill,stroke,lineWidth){
+   ctx.beginPath();
+   points.forEach((q,i)=>{
+     const p=pt(q[0],q[1]);
+     if(i===0) ctx.moveTo(p.x,p.y);
+     else ctx.lineTo(p.x,p.y);
+   });
+   ctx.closePath();
+   if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+   if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lineWidth||2; ctx.stroke(); }
+ }
+
+ // All coordinates below are local to the board center / diamond center.
+ // The rotation is applied to every vertex around (cx,cy), not per-shape.
+ pathPoly([[0,-D],[D,0],[0,D],[-D,0]], null, dark, 5);
+
+ const tris=[
+   [[0,-D],[L,-D],[0,C]],
+   [[D,0],[D,L],[-C,0]],
+   [[0,D],[-L,D],[0,-C]],
+   [[-D,0],[-D,-L],[C,0]]
+ ];
+ for(const tri of tris) pathPoly(tri, dark, dark, 2);
+
+ pathPoly([[0,-C*.32],[C*.32,0],[0,C*.32],[-C*.32,0]], board, null, 0);
+}
+
+function drawCenterSymbolGrouped(cx,cy){
+ const pal=scheme();
+ // German mode needs the default middle symbol rotated exactly around the
+ // board center, which is also the diamond center. Do it by explicitly
+ // rotating every point around (cx,cy), not by rotating each shape locally.
+ if(pal.symbolRotation && centerSymbol!=='spiral'){
+   drawJoulutorttuRotatedAroundBoardCenter(cx,cy,62,pal.symbolRotation);
+   return;
+ }
+ ctx.save();
+ ctx.translate(cx,cy);
+ if(pal.symbolRotation) ctx.rotate(pal.symbolRotation);
+ if(centerSymbol==='spiral'){
+   drawTrasselSpiral(0,0,96);
+ } else {
+   drawJoulutorttu(0,0,62);
+ }
+ ctx.restore();
+}
+
 function drawTrasselSpiral(cx,cy,size){
  ctx.save();
  ctx.translate(cx,cy);
@@ -404,7 +777,82 @@ function drawTrasselSpiral(cx,cy,size){
  ctx.restore();
 }
 
-function draw(){
+
+function fireworkColor(player){
+ const vivid={
+   red:'#ff174d',
+   blue:'#00a3ff',
+   green:'#00ff66',
+   yellow:'#ffe600'
+ };
+ return vivid[player]||'#ffffff';
+}
+function spawnFireworkBurst(cx,cy,col){
+ const sparkle='#ffffff', count=34;
+ fireworks.push({x:cx,y:cy,vx:0,vy:0,life:28,max:28,color:col,r:18,ring:true});
+ for(let i=0;i<count;i++){
+   const a=(Math.PI*2*i/count)+Math.random()*.16;
+   const sp=3.0+Math.random()*5.6;
+   const c=(i%7===0)?sparkle:col;
+   fireworks.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:78+Math.random()*38,max:116,color:c,r:3.5+Math.random()*2.8});
+ }
+}
+function triggerFireworks(player){
+ if(fireworksStarted) return;
+ fireworksStarted=true;
+ const col=fireworkColor(player);
+ fireworkQueue=[];
+ for(let burst=0; burst<9; burst++){
+   fireworkQueue.push({
+     delay:burst*9,
+     x:W/2+(Math.random()-.5)*460,
+     y:H/2-120+(Math.random()-.5)*320,
+     color:col
+   });
+ }
+ [523,659,784,1046,1318,1568].forEach((f,i)=>setTimeout(()=>beep(f,.18,.86),i*85));
+}
+function updateFireworks(){
+ for(const q of fireworkQueue) q.delay--;
+ const ready=fireworkQueue.filter(q=>q.delay<=0);
+ fireworkQueue=fireworkQueue.filter(q=>q.delay>0);
+ for(const q of ready) spawnFireworkBurst(q.x,q.y,q.color);
+ for(const f of fireworks){
+   if(!f.ring){
+     f.x+=f.vx; f.y+=f.vy; f.vy+=.045; f.vx*=.992; f.vy*=.992;
+   } else {
+     f.r+=3.6;
+   }
+   f.life--;
+ }
+ // Hard cap protects slower devices from particle buildup.
+ if(fireworks.length>360) fireworks.splice(0,fireworks.length-360);
+ fireworks=fireworks.filter(f=>f.life>0);
+}
+function drawFireworks(){
+ if(!fireworks.length) return;
+ ctx.save();
+ ctx.globalCompositeOperation='lighter';
+ for(const f of fireworks){
+   const alpha=Math.max(0,f.life/f.max);
+   ctx.globalAlpha=f.ring?alpha*.48:alpha;
+   ctx.strokeStyle=f.color;
+   ctx.fillStyle=f.color;
+   if(f.ring){
+     ctx.lineWidth=4;
+     ctx.beginPath();
+     ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+     ctx.stroke();
+   } else {
+     ctx.shadowColor=f.color;
+     ctx.shadowBlur=10;
+     ctx.beginPath();
+     ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+     ctx.fill();
+   }
+ }
+ ctx.restore();
+}function draw(){
  ctx.clearRect(0,0,W,H);
  ctx.save();
  // Rainbow secret uses a dedicated consistent classic-wood presentation so it doesn't clash
@@ -412,37 +860,22 @@ function draw(){
  const pal=scheme();
 
  // Fill the entire canvas with the active presentation.
- canvas.style.background=pal.canvas;
+ applyPageTheme();
  ctx.fillStyle=pal.canvas;
  ctx.fillRect(0,0,W,H);
 
- // Full board frame.
- const frameGrad=ctx.createLinearGradient(0,0,W,H);
- frameGrad.addColorStop(0,pal.frame0);
- frameGrad.addColorStop(.55,pal.frame1);
- frameGrad.addColorStop(1,pal.frame2);
- ctx.fillStyle=frameGrad;
- roundRect(0,0,W,H,18);
- ctx.fill();
+ // Rebuilt minimal frame: no full outer canvas frame.
+ // Only a clean rail around the actual play area.
+ const framePad=16;
+ ctx.fillStyle=pal.simpleFrame||pal.rail;
+ ctx.fillRect(minX-framePad,minY-framePad,maxX-minX+framePad*2,maxY-minY+framePad*2);
 
- ctx.strokeStyle=pal.frameOuter;
- ctx.lineWidth=26;
- roundRect(13,13,W-26,H-26,18);
- ctx.stroke();
+ ctx.strokeStyle=pal.simpleFrameEdge||pal.frameOuter;
+ ctx.lineWidth=4;
+ ctx.strokeRect(minX-framePad,minY-framePad,maxX-minX+framePad*2,maxY-minY+framePad*2);
 
- ctx.strokeStyle=pal.frameInner;
- ctx.lineWidth=12;
- roundRect(34,34,W-68,H-68,14);
- ctx.stroke();
-
- ctx.strokeStyle=pal.railOuter;
- ctx.lineWidth=32;
- ctx.strokeRect(minX-16,minY-16,maxX-minX+32,maxY-minY+32);
- ctx.strokeStyle=pal.rail;
- ctx.lineWidth=22;
- ctx.strokeRect(minX-11,minY-11,maxX-minX+22,maxY-minY+22);
- ctx.strokeStyle=pal.railInner;
- ctx.lineWidth=5;
+ ctx.strokeStyle=pal.simpleFrameInner||pal.railInner||pal.simpleFrame;
+ ctx.lineWidth=3;
  ctx.strokeRect(minX-2,minY-2,maxX-minX+4,maxY-minY+4);
 
  if(boardRainbow){
@@ -484,7 +917,7 @@ function draw(){
 
  // Center circle filled with the active board color, with themed outline.
  ctx.save();
- ctx.fillStyle=pal.board;
+ ctx.fillStyle=pal.centerFill||pal.board;
  ctx.beginPath();
  ctx.arc(W/2,H/2,96,0,Math.PI*2);
  ctx.fill();
@@ -496,7 +929,7 @@ function draw(){
  ctx.stroke();
  ctx.restore();
 
- if(centerSymbol==='spiral'){ drawTrasselSpiral(W/2,H/2,96); } else { drawJoulutorttu(W/2,H/2,62); }
+ drawCenterSymbolGrouped(W/2,H/2);
  drawBoardGuides();
 
  for(const p of pockets){
@@ -536,6 +969,7 @@ function draw(){
    ctx.fill();
  }
  if(aimHelper&&!moving&&!won) drawAimGuide();
+ drawFireworks();
  ctx.restore();
 }
 function drawDisc(b){
@@ -561,8 +995,88 @@ function drawDisc(b){
 }
 function drawAimGuide(){
  const pal=scheme();
- let targets=bodies.filter(b=>!b.pocketed&&b.color===current);
  ctx.save();
+
+ // When aiming, show the striker's predicted path and the predicted movement
+ // direction of the first disc it would hit.
+ if(dragging&&dragFrom&&dragNow&&striker&&!moving&&!won){
+   const vx=dragFrom.x-dragNow.x, vy=dragFrom.y-dragNow.y;
+   const mag=Math.hypot(vx,vy);
+   if(mag>6){
+     const ux=vx/mag, uy=vy/mag;
+     let best=null;
+     for(const b of bodies){
+       if(b.pocketed) continue;
+       const cx=b.x-striker.x, cy=b.y-striker.y;
+       const proj=cx*ux+cy*uy;
+       if(proj<=0) continue;
+       const closestX=striker.x+ux*proj, closestY=striker.y+uy*proj;
+       const miss=dist(closestX,closestY,b.x,b.y);
+       const hitR=striker.r+b.r;
+       if(miss>hitR) continue;
+       const back=Math.sqrt(Math.max(0,hitR*hitR-miss*miss));
+       const t=proj-back;
+       if(t<0) continue;
+       if(!best||t<best.t) best={b,t};
+     }
+
+     const maxLen=620;
+     const pathEndX=striker.x+ux*(best?best.t:maxLen);
+     const pathEndY=striker.y+uy*(best?best.t:maxLen);
+
+     // Striker path.
+     ctx.strokeStyle=pal.aimGuide;
+     ctx.lineWidth=3;
+     ctx.setLineDash([10,8]);
+     ctx.beginPath();
+     ctx.moveTo(striker.x,striker.y);
+     ctx.lineTo(pathEndX,pathEndY);
+     ctx.stroke();
+
+     if(best){
+       const b=best.b;
+       const hitX=striker.x+ux*best.t, hitY=striker.y+uy*best.t;
+       const nx=b.x-hitX, ny=b.y-hitY;
+       const nd=Math.hypot(nx,ny)||1;
+       const tx=nx/nd, ty=ny/nd;
+
+       // The aimed disc moves along the collision normal.
+       const targetLen=210;
+       const endX=b.x+tx*targetLen, endY=b.y+ty*targetLen;
+
+       ctx.setLineDash([]);
+       ctx.strokeStyle=pal.drag;
+       ctx.lineWidth=5;
+       ctx.lineCap='round';
+       ctx.beginPath();
+       ctx.moveTo(b.x,b.y);
+       ctx.lineTo(endX,endY);
+       ctx.stroke();
+
+       // Arrow head for the target-disc direction.
+       const ah=16, ang=Math.atan2(ty,tx);
+       ctx.beginPath();
+       ctx.moveTo(endX,endY);
+       ctx.lineTo(endX-Math.cos(ang-.55)*ah,endY-Math.sin(ang-.55)*ah);
+       ctx.lineTo(endX-Math.cos(ang+.55)*ah,endY-Math.sin(ang+.55)*ah);
+       ctx.closePath();
+       ctx.fillStyle=pal.drag;
+       ctx.fill();
+
+       // Contact marker.
+       ctx.beginPath();
+       ctx.arc(hitX,hitY,6,0,Math.PI*2);
+       ctx.fillStyle=pal.aimGuide;
+       ctx.fill();
+     }
+
+     ctx.restore();
+     return;
+   }
+ }
+
+ // Fallback helper when not pulling: show clear pocket lines for own discs.
+ let targets=bodies.filter(b=>!b.pocketed&&b.color===current);
  ctx.globalAlpha=1;
  ctx.strokeStyle=pal.aimGuide;
  ctx.lineWidth=2;
@@ -828,7 +1342,8 @@ function botChooseShot(){ return aiMode[current]==='impossible'?botChooseShotImp
 function startBotHumanLikeTurn(){
  if(moving||won||!isComputerTurn()||shotEvents||aiActing) return;
  const shot=botChooseShot();
- const targetStart=placeFreeNear(shot.start.x,shot.start.y,strikerR);
+ const line=shootingLine(current);
+ const targetStart=safeStrikerLinePos(line,line.axis==='y'?shot.start.x:shot.start.y);
  const dx=shot.aim.x-targetStart.x, dy=shot.aim.y-targetStart.y, d=Math.hypot(dx,dy)||1;
  const wobble=shot.wobble||0;
  const ca=Math.cos(wobble), sa=Math.sin(wobble);
@@ -907,7 +1422,7 @@ function loop(now){
  const elapsed=Math.min(100, now-lastFrameTime);
  lastFrameTime=now;
  if(moving){
-   physicsAccumulator += elapsed;
+   physicsAccumulator += elapsed * gameSpeed;
    let steps=0;
    while(physicsAccumulator>=PHYSICS_DT_MS && moving && steps<MAX_PHYSICS_STEPS){
      updatePhysics();
@@ -917,17 +1432,18 @@ function loop(now){
    if(steps>=MAX_PHYSICS_STEPS) physicsAccumulator=0;
  } else {
    physicsAccumulator=0;
-   updateAiActing(elapsed);
+   updateAiActing(elapsed * gameSpeed);
    maybeAutoBot();
  }
- if(spiralSpin && centerSymbol==='spiral') spiralAngle -= elapsed * 0.0012;
+ if(spiralSpin && centerSymbol==='spiral') spiralAngle -= elapsed * gameSpeed * 0.0012;
+ for(let i=0;i<gameSpeed;i++) updateFireworks();
  updateUI();
  draw();
  requestAnimationFrame(loop);
 }
 function pos(e){ const rect=canvas.getBoundingClientRect(), t=e.touches?e.touches[0]:e; return {x:(t.clientX-rect.left)*W/rect.width,y:(t.clientY-rect.top)*H/rect.height};}
 function linePlacement(p){ const l=shootingLine(current); if(l.axis==='y') return {ok:Math.abs(p.y-l.value)<55,x:p.x,y:l.value,key:p.x}; return {ok:Math.abs(p.x-l.value)<55,x:l.value,y:p.y,key:p.y};}
-canvas.addEventListener('pointerdown',e=>{ unlockAudio(); if(moving||won||isComputerTurn())return; const p=pos(e); if(dist(p.x,p.y,W/2,H/2)<=112){ triggerCenterSecret(); return; } if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok && isSafeStrikerPos(lp.x,lp.y)){ striker.x=lp.x; striker.y=lp.y; } } });
+canvas.addEventListener('pointerdown',e=>{ unlockAudio(); const p=pos(e); if(!moving&&dist(p.x,p.y,W/2,H/2)<=112){ triggerCenterSecret(); return; } if(moving||won||isComputerTurn())return; if(striker&&dist(p.x,p.y,striker.x,striker.y)<striker.r+12){ dragging=true; dragFrom={x:striker.x,y:striker.y}; dragNow=p; canvas.setPointerCapture(e.pointerId); } else { const lp=linePlacement(p); if(lp.ok){ const line=shootingLine(current); const safe=safeStrikerLinePos(line,lp.key); striker.x=safe.x; striker.y=safe.y; } } });
 canvas.addEventListener('pointermove',e=>{ if(dragging) dragNow=pos(e); });
 canvas.addEventListener('pointerup',e=>{ if(!dragging||moving||won||isComputerTurn())return; const p=pos(e); dragging=false; const vx=(dragFrom.x-p.x), vy=(dragFrom.y-p.y), power=Math.min(165,Math.hypot(vx,vy)); if(power<8) return; lastSnapshot=cloneState(); shotEvents={potted:[],strikerPocket:false}; striker.vx=vx*.125; striker.vy=vy*.125; physicsAccumulator=0; lastFrameTime=null; moving=true; });
 window.addEventListener('keydown',e=>{
@@ -939,20 +1455,45 @@ window.addEventListener('keydown',e=>{
    if(striker){ striker.vx=0; striker.vy=0; }
  }
 });
-function syncControls(){ document.getElementById('variant').value=variant; document.getElementById('players').value=String(playerCount); document.getElementById('language').value=lang; document.getElementById('scheme').value=boardScheme;}
+function syncControls(){
+ document.getElementById('variant').value=variant;
+ document.getElementById('players').value=String(playerCount);
+ document.getElementById('language').value=lang;
+ const sc=document.getElementById('scheme');
+ if(sc&&sc.options[3]) sc.options[3].hidden=!germanUnlocked;
+ if(boardScheme==='german'&&!germanUnlocked) boardScheme='wood';
+ if(sc) sc.value=boardScheme;
+}
 document.getElementById('newBtn').onclick=resetGame; document.getElementById('undoBtn').onclick=()=>{restoreState(lastSnapshot); lastSnapshot=null; log(lang==='fi'?'Lyönti kumottu.':lang==='sv'?'Slaget ångrades.':'Undid last shot.');};
 document.getElementById('applyVariant').onclick=()=>{variant=document.getElementById('variant').value; playerCount=Number(document.getElementById('players').value); resetGame();};
 document.getElementById('language').onchange=e=>{lang=e.target.value; syncControls(); updateText();};
-document.getElementById('scheme').onchange=e=>{boardScheme=e.target.value; syncControls(); updateText(); updateUI();};
+document.getElementById('scheme').onchange=e=>{boardScheme=(e.target.value==='german'&&!germanUnlocked)?'wood':e.target.value; applyPageTheme(); syncControls(); updateText(); updateUI();};
 document.getElementById('players').onchange=e=>{playerCount=Number(e.target.value); players=playerOrders[playerCount]; botPending=false; updateText();};
 document.getElementById('variant').onchange=e=>{variant=e.target.value;};
 document.getElementById('botBtn').onclick=()=>{aimHelper=!aimHelper; updateText();};
+document.getElementById('speedBtn').onclick=()=>{gameSpeed=gameSpeed===1?2:(gameSpeed===2?4:1); updateText();};
 document.getElementById('soundBtn').onclick=()=>{sound=!sound; if(sound) unlockAudio(); updateText();};
+document.getElementById('musicBtn').onclick=toggleThemeMusic;
+
+
+function unlockGermanScheme(){
+ if(germanUnlocked) return;
+ germanUnlocked=true;
+ boardRainbow=false;
+ boardScheme='german';
+ syncControls();
+ applyPageTheme();
+ updateText();
+ updateUI();
+ beep(440,.12,.65);
+ setTimeout(()=>beep(660,.14,.72),120);
+}
 
 const creditEl=document.getElementById('credit');
 if(creditEl){
  creditEl.style.cursor='default';
  creditEl.addEventListener('click',()=>{
+   unlockGermanScheme();
    trasselTapCount++;
    clearTimeout(trasselTapTimer);
    trasselTapTimer=setTimeout(()=>{trasselTapCount=0;},900);
@@ -982,6 +1523,12 @@ function triggerCenterSecret(){
 
 ['pointerdown','touchstart','mousedown','keydown'].forEach(ev=>{
  window.addEventListener(ev, unlockAudio, {passive:true});
+});
+
+
+document.querySelectorAll('button,select,label.toggle').forEach(el=>{
+ el.addEventListener('mouseenter',()=>{ el.style.background=scheme().controlHover; });
+ el.addEventListener('mouseleave',()=>{ el.style.background=scheme().controlBg; });
 });
 
 syncControls(); resetGame(); requestAnimationFrame(loop);
