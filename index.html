@@ -10,12 +10,12 @@
   header{padding:14px 18px;border-bottom:1px solid #ffffff18;background:#181812d9;backdrop-filter:blur(6px);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   h1{font-size:22px;margin:0;letter-spacing:.2px} .tag{color:var(--muted)}
   main{display:grid;grid-template-columns:minmax(320px,1fr) 380px;gap:16px;max-width:1240px;margin:0 auto;padding:16px}
-  #wrap{display:grid;place-items:center}.boardShell{width:min(92vw,760px);aspect-ratio:1;padding:8px;border-radius:24px;background:linear-gradient(145deg,#7b4a28,#c38a4e 45%,#6d3e23);box-shadow:0 24px 60px #0009,inset 0 0 0 5px #432616,inset 0 0 18px #fff2;}
+  #wrap{display:grid;place-items:start center}.boardShell{width:min(92vw,760px);aspect-ratio:1;padding:8px;border-radius:24px;background:linear-gradient(145deg,#7b4a28,#c38a4e 45%,#6d3e23);box-shadow:0 24px 60px #0009,inset 0 0 0 5px #432616,inset 0 0 18px #fff2;}
   canvas{width:100%;height:100%;display:block;border-radius:14px;background:#c99658;box-shadow:inset 0 0 0 8px #6e3f22;touch-action:none;cursor:crosshair}
   aside{background:#222018e8;border:1px solid #ffffff1c;border-radius:18px;padding:16px;box-shadow:0 18px 45px #0006;align-self:start;position:sticky;top:12px}
-  .status{padding:12px;border:1px solid #ffffff21;border-radius:14px;background:#00000025;margin-bottom:12px}.turn{font-size:19px;font-weight:700}.pill{display:inline-block;padding:2px 8px;border-radius:999px;margin-left:6px;color:#fff;text-shadow:0 1px 2px #0008}.red{background:var(--red)}.blue{background:var(--blue)}.green{background:var(--green)}.yellow{background:var(--yellow);color:#2b2110;text-shadow:none}
-  .score{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.score div{border-radius:12px;background:#0003;padding:10px}.big{font-size:24px;font-weight:800}
-  button,select,label.toggle{appearance:none;border:1px solid #ffffff25;background:#3a3529;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}button:hover,select:hover,label.toggle:hover{background:#494232}.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.botGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}.botGrid label{font-size:12px;color:var(--muted);display:grid;gap:4px}.small{font-size:12px;color:var(--muted)}
+  .status{padding:12px;border:1px solid #ffffff21;border-radius:14px;background:#00000025;margin-bottom:12px;min-height:188px}.turn{font-size:19px;font-weight:700}#help{min-height:42px}#winText{min-height:24px;display:block}.pill{display:inline-block;padding:2px 8px;border-radius:999px;margin-left:6px;color:#fff;text-shadow:0 1px 2px #0008}.red{background:var(--red)}.blue{background:var(--blue)}.green{background:var(--green)}.yellow{background:var(--yellow);color:#2b2110;text-shadow:none}
+  .score{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;min-height:76px}.score div{border-radius:12px;background:#0003;padding:10px;min-height:64px}.big{font-size:24px;font-weight:800}
+  button,select,label.toggle{appearance:none;border:1px solid #ffffff25;background:#3a3529;color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}button:hover,select:hover,label.toggle:hover{background:#494232}.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px;align-items:center}.botGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}.botGrid label{font-size:12px;color:var(--muted);display:grid;gap:4px}.small{font-size:12px;color:var(--muted)}
   details{border-top:1px solid #ffffff1a;margin-top:12px;padding-top:10px}summary{cursor:pointer;font-weight:800}ul{padding-left:18px}kbd{background:#111;border:1px solid #555;border-radius:5px;padding:1px 5px}.log{height:148px;overflow:auto;background:#11100c;border-radius:12px;padding:10px;color:#e9ddc2;font-size:13px}.log p{margin:0 0 7px}
   @media (max-width:920px){main{grid-template-columns:1fr}aside{position:static}.boardShell{width:min(95vw,720px)}}
 </style>
@@ -67,6 +67,7 @@
 <!-- LIGHTER_OUTER_BOARD_AREAS_V48 -->
 <!-- DOUBLE_SPEED_OPTION_V49 -->
 <!-- FOUR_X_SPEED_OPTION_V50 -->
+<!-- STABLE_LAYOUT_NO_JUMP_V51 -->
 <!-- FIXED_LINES_JOULUTORTTU_TRASSEL_VARDIAS_BUILD -->
 <header><h1>Korona</h1><span class="tag" id="tagline"></span></header>
 <main>
